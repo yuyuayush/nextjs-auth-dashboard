@@ -3,6 +3,9 @@ import { Send, User, Image as ImageIcon, Loader2, ChevronLeft } from 'lucide-rea
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { useEffect, useRef, useState } from 'react';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 
 interface ChatUser {
     id: string;
