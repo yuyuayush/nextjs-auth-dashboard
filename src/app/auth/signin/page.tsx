@@ -126,7 +126,7 @@ export default function SignIn() {
                 await signIn.social(
                   {
                     provider: "google",
-                    callbackURL: "/dashboard"
+                    callbackURL: `${process.env.APP_URL}/dashboard`
                   },
                   {
                     onRequest: (ctx) => {
@@ -157,7 +157,7 @@ export default function SignIn() {
                 await signIn.social(
                   {
                     provider: "github",
-                    callbackURL: "/dashboard"
+                    callbackURL: `${process.env.APP_URL}/dashboard`
                   },
                   {
                     onRequest: (ctx) => {
