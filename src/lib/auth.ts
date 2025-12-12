@@ -11,7 +11,8 @@ export const auth = betterAuth({
     baseURL: process.env.APP_URL,
     allowedOrigins: [
         "http://localhost:3000",
-        "https://nextjs-auth-dashboard-1f6yunf2c-yuyuayushs-projects.vercel.app", // add this
+        "https://nextjs-auth-dashboard-jz5tdhjus-yuyuayushs-projects.vercel.app/",
+         // add this
     ],
     
     database: drizzleAdapter(db, {
