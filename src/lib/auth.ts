@@ -9,9 +9,9 @@ import { db } from '@/drizzle/db';
 export const auth = betterAuth({
 
     baseURL: process.env.APP_URL,
-    allowedOrigins: [
+    trustedOrigins: [
         "http://localhost:3000",
-        "https://nextjs-auth-dashboard-jz5tdhjus-yuyuayushs-projects.vercel.app", "https://nextjs-auth-dashboard-kappa.vercel.app", /^https:\/\/nextjs-auth-dashboard-.*\.vercel\.app$/
+        "https://nextjs-auth-dashboard-jz5tdhjus-yuyuayushs-projects.vercel.app", "https://nextjs-auth-dashboard-kappa.vercel.app", "/^https:\/\/nextjs-auth-dashboard-.*\.vercel\.app$/"
         // add this
     ],
 
