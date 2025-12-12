@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2} from "lucide-react";
 import { signUp } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -96,7 +96,7 @@ export default function SignUp() {
 								email,
 								password,
 								name: `${firstName} ${lastName}`,
-								callbackURL: `${process.env.APP_URL}/dashboard`,
+								callbackURL: "/dashboard",
 								fetchOptions: {
 									onResponse: () => {
 										setLoading(false);
@@ -133,3 +133,11 @@ export default function SignUp() {
 	);
 }
 
+async function convertImageToBase64(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onloadend = () => resolve(reader.result as string);
+		reader.onerror = reject;
+		reader.readAsDataURL(file);
+	});
+}
