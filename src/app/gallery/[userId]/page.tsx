@@ -29,10 +29,10 @@ export default async function UserPublicGallery({ params, searchParams }: PagePr
     const { posts, isUnlocked } = await getUserGalleryPosts(userId, token);
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
-            {/* Simple Header for Profile */}
-            <div className="bg-white border-b shadow-sm py-12 mb-8">
-                <div className="container mx-auto px-4 text-center">
+        <div className="min-h-screen bg-slate-50 pb-20 pt-8">
+            {/* Profile Header */}
+            <div className="container mx-auto px-4 mb-8">
+                <div className="bg-white rounded-2xl shadow-sm border p-8 text-center max-w-3xl mx-auto">
                     <div className="w-24 h-24 mx-auto rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-600 mb-4 overflow-hidden relative">
                         {userResult.image ? (
                             // eslint-disable-next-line @next/next/no-img-element

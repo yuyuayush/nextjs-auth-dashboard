@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 export default function CreatePost() {
     const [loading, setLoading] = useState(false);
     const [fileCount, setFileCount] = useState(0);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     async function handleSubmit(formData: FormData) {
         setLoading(true);
@@ -22,6 +23,7 @@ export default function CreatePost() {
                 const form = document.getElementById('create-post-form') as HTMLFormElement;
                 form?.reset();
                 setFileCount(0);
+                setPreviewUrl(null);
             }
         } catch (error) {
             toast.error('Failed to create post');
@@ -31,11 +33,26 @@ export default function CreatePost() {
         }
     }
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+
+        setFileCount(files.length);
+
+        if (files.length === 1) {
+            const file = files[0];
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+        } else {
+            setPreviewUrl(null);
+        }
+    };
+
     return (
         <form id="create-post-form" action={handleSubmit} className="space-y-6">
             <div className="space-y-2">
                 <Label htmlFor="image">Photos</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors cursor-pointer relative bg-gray-50/50 hover:bg-blue-50/50">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors cursor-pointer relative bg-gray-50/50 hover:bg-blue-50/50 overflow-hidden min-h-[200px]">
                     <input
                         type="file"
                         name="image"
@@ -43,10 +60,14 @@ export default function CreatePost() {
                         accept="image/*"
                         multiple
                         required
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={(e) => setFileCount(e.target.files?.length || 0)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        onChange={handleFileChange}
                     />
-                    {fileCount > 0 ? (
+
+                    {previewUrl && fileCount === 1 ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-contain p-2" />
+                    ) : fileCount > 0 ? (
                         <div className="flex flex-col items-center">
                             <Images className="w-10 h-10 mb-2 text-blue-600" />
                             <span className="text-lg font-semibold text-blue-700">{fileCount} photos selected</span>

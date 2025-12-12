@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Toaster } from 'sonner';
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,37 +23,21 @@ export const metadata: Metadata = {
   description: "A Next.js app with authentication and dashboard",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <header className="p-4 border-b">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <Link href="/">
-              <h1 className="text-xl font-bold">Auth Dashboard</h1>
-            </Link>
-            <nav className="flex gap-4">
-              <Link href="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
-              </Link>
-              <Link href="/chat">
-                <Button variant="ghost">Chat</Button>
-              </Link>
-              <Link href="/auth/signin">
-                <Button variant="outline">Sign In</Button>
-              </Link>
-              <Link href="/auth/signup">
-                <Button>Sign Up</Button>
-              </Link>
-            </nav>
-          </div>
-        </header>
+        <Navbar session={session} />
         <main>
           {children}
         </main>

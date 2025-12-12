@@ -5,6 +5,8 @@ import { messages, user } from "@/drizzle/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { or, and, eq, asc, ne } from "drizzle-orm";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 export async function getUsers() {
     const session = await auth.api.getSession({
@@ -20,7 +22,7 @@ export async function getUsers() {
     return allUsers;
 }
 
-export async function sendMessage(receiverId: string, content: string) {
+export async function sendMessage(receiverId: string, content: string, attachmentUrl?: string) {
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -33,6 +35,7 @@ export async function sendMessage(receiverId: string, content: string) {
         senderId: session.user.id,
         receiverId,
         content,
+        attachmentUrl
     });
 
     return { success: true };
@@ -62,4 +65,31 @@ export async function getMessages(otherUserId: string) {
     });
 
     return chatMessages;
+}
+
+export async function uploadChatImage(formData: FormData) {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
+    const file = formData.get("file") as File;
+    if (!file) throw new Error("No file provided");
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = `chat-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "chat");
+
+    try {
+        await fs.access(uploadDir);
+    } catch {
+        await fs.mkdir(uploadDir, { recursive: true });
+    }
+
+    await fs.writeFile(path.join(uploadDir, filename), buffer);
+
+    return { url: `/uploads/chat/${filename}` };
 }

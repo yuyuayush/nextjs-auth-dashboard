@@ -31,10 +31,13 @@ export default function ChatInterface({
     const selectedFriend = friends.find(f => f.id === selectedFriendId) || null;
 
     return (
-        <div className="flex h-full">
-            {/* Sidebar */}
-            <div className="w-80 bg-gray-50 border-r flex flex-col">
-                <div className="p-4 border-b bg-white">
+        <div className="flex h-full bg-white md:bg-transparent overflow-hidden">
+            {/* Sidebar - Hidden on mobile if friend selected */}
+            <div className={cn(
+                "w-full md:w-80 bg-gray-50 border-r flex flex-col absolute z-10 md:relative h-full transition-transform duration-300 md:translate-x-0",
+                selectedFriendId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+            )}>
+                <div className="p-4 border-b bg-white flex justify-between items-center h-16">
                     <h2 className="font-bold text-xl text-gray-800">Messages</h2>
                 </div>
 
@@ -78,7 +81,7 @@ export default function ChatInterface({
                                         selectedFriendId === friend.id ? "bg-blue-50 border-blue-100" : "hover:bg-gray-100"
                                     )}
                                 >
-                                    <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden relative">
+                                    <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden relative flex-shrink-0">
                                         {friend.image ? (
                                             <Image src={friend.image} alt={friend.name} fill className="object-cover" />
                                         ) : (
@@ -87,8 +90,8 @@ export default function ChatInterface({
                                             </div>
                                         )}
                                     </div>
-                                    <div>
-                                        <p className="font-medium text-gray-900">{friend.name}</p>
+                                    <div className="overflow-hidden">
+                                        <p className="font-medium text-gray-900 truncate">{friend.name}</p>
                                         <p className="text-xs text-gray-500">Tap to chat</p>
                                     </div>
                                 </div>
@@ -106,9 +109,16 @@ export default function ChatInterface({
                 </div>
             </div>
 
-            {/* Main Area */}
-            <div className="flex-1 flex flex-col">
-                <ChatWindow selectedUser={selectedFriend} currentUserId={currentUserId} />
+            {/* Main Area - Full width on mobile when open */}
+            <div className={cn(
+                "flex-1 flex flex-col bg-white absolute inset-0 md:relative md:inset-auto z-20 md:z-auto transition-transform duration-300 md:transform-none",
+                selectedFriendId ? "translate-x-0" : "translate-x-full md:translate-x-0"
+            )}>
+                <ChatWindow
+                    selectedUser={selectedFriend}
+                    currentUserId={currentUserId}
+                    onBack={() => setSelectedFriendId(null)}
+                />
             </div>
         </div>
     );

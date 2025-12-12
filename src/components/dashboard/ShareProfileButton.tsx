@@ -21,8 +21,9 @@ export default function ShareProfileButton({ userId }: { userId: string }) {
             const token = await generateShareToken();
             const url = `${window.location.origin}/gallery/${userId}?token=${token}`;
             await copyToClipboard(url, "Secret (Full Access) link copied!");
-        } catch (error) {
-            toast.error("Failed to generate link");
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Failed to generate link");
         } finally {
             setLoading(false);
         }

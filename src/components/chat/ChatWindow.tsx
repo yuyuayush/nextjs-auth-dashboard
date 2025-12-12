@@ -1,12 +1,8 @@
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { getMessages, sendMessage } from '@/app/actions/chat';
-import { Send, User } from 'lucide-react';
+import { getMessages, sendMessage, uploadChatImage } from '@/app/actions/chat';
+import { Send, User, Image as ImageIcon, Loader2, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 interface ChatUser {
     id: string;
@@ -17,21 +13,26 @@ interface ChatUser {
 interface Message {
     id: string;
     content: string;
+    attachmentUrl: string | null;
     senderId: string;
     createdAt: Date;
 }
 
 export default function ChatWindow({
     selectedUser,
-    currentUserId
+    currentUserId,
+    onBack
 }: {
     selectedUser: ChatUser | null;
     currentUserId: string;
+    onBack?: () => void;
 }) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const pollingRef = useRef<NodeJS.Timeout>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -59,6 +60,7 @@ export default function ChatWindow({
         const mappedMsgs = msgs.map(m => ({
             id: m.id,
             content: m.content,
+            attachmentUrl: m.attachmentUrl,
             senderId: m.senderId,
             createdAt: m.createdAt
         }));
@@ -71,15 +73,36 @@ export default function ChatWindow({
         });
     };
 
-    const handleSend = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newMessage.trim() || !selectedUser) return;
+    const handleSend = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if ((!newMessage.trim()) || !selectedUser) return;
 
         const tempContent = newMessage;
         setNewMessage('');
 
         await sendMessage(selectedUser.id, tempContent);
         await fetchMessages();
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedUser) return;
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const { url } = await uploadChatImage(formData);
+
+            await sendMessage(selectedUser.id, "Shared an image", url);
+            await fetchMessages();
+            toast.success("Image sent");
+        } catch (error) {
+            toast.error("Failed to send image");
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     if (!selectedUser) {
@@ -89,6 +112,10 @@ export default function ChatWindow({
                     <User className="w-8 h-8 text-gray-400" />
                 </div>
                 <p>Select a friend to start chatting</p>
+                {/* Mobile Back Button for empty state if needed, though usually covered by parent logic */}
+                <Button variant="ghost" className="md:hidden mt-4 text-blue-600" onClick={onBack}>
+                    Back to List
+                </Button>
             </div>
         );
     }
@@ -96,7 +123,10 @@ export default function ChatWindow({
     return (
         <div className="flex-1 flex flex-col h-full bg-white relative">
             {/* Header */}
-            <div className="p-4 border-b flex items-center gap-3 bg-white">
+            <div className="p-4 border-b flex items-center gap-3 bg-white h-16 shadow-sm z-10">
+                <Button variant="ghost" size="icon" className="md:hidden -ml-2" onClick={onBack}>
+                    <ChevronLeft className="w-6 h-6" />
+                </Button>
                 <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden relative">
                     {selectedUser.image ? (
                         <Image src={selectedUser.image} alt={selectedUser.name} fill className="object-cover" />
