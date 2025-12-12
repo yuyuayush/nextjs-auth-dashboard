@@ -1,1 +1,5 @@
 export * from "./schemas/users"
+export * from "./schemas/posts"
+export * from "./schemas/chat"
+export * from "./schemas/friends"
+export * from "./schemas/tokens"

@@ -1,95 +1,56 @@
-'use client';
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { getDashboardPosts } from "@/app/actions/post";
+import UserGallery from "@/components/dashboard/UserGallery";
+import CreatePost from "@/components/gallery/CreatePost";
+import ShareProfileButton from "@/components/dashboard/ShareProfileButton";
 
-import { useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
-import { useSession } from '@/lib/auth-client';
-import { Chat } from '@/components/chat';
+export default async function DashboardPage() {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const { data: session, isPending } = useSession();
-  
+  if (!session) {
+    redirect("/auth/signin");
+  }
 
-
-  useEffect(() => {
-    if (!isPending) {
-        console.log('session', session);
-      if (!session) {
-        router.push('/auth/signin');
-      }
-    }
-  }, [router,session,isPending]);
-
-
+  const posts = await getDashboardPosts();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Welcome, {session?.user?.name || 'User'}!</h1>
-        <p className="text-gray-600 mt-2">
-          This is your personalized dashboard with important information.
-        </p>
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
+            <p className="text-gray-500 mt-1">Manage your gallery and uploads.</p>
+          </div>
+          <div className="text-right flex flex-col items-end gap-2">
+            <div>
+              <p className="text-sm text-gray-900 font-medium">{session.user.name}</p>
+              <p className="text-xs text-text-gray-500">{session.user.email}</p>
+            </div>
+            <ShareProfileButton userId={session.user.id} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Upload */}
+          <div className="lg:col-span-1">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-8">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Upload Photos</h2>
+              <CreatePost />
+            </div>
+          </div>
+
+          {/* Right Column: Gallery */}
+          <div className="lg:col-span-2 space-y-6">
+            <h2 className="text-xl font-semibold text-gray-800">My Gallery</h2>
+            <UserGallery posts={posts} />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Overview</CardTitle>
-            <CardDescription>Your account overview</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">5</p>
-            <p className="text-sm text-gray-500">Active items</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance</CardTitle>
-            <CardDescription>Your performance metrics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">92%</p>
-            <p className="text-sm text-gray-500">Success rate</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Tasks</CardTitle>
-            <CardDescription>Your pending tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">3</p>
-            <p className="text-sm text-gray-500">Tasks remaining</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Your recent activity log</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            <li className="flex justify-between py-2 border-b">
-              <span>Project created</span>
-              <span className="text-gray-500">Today</span>
-            </li>
-            <li className="flex justify-between py-2 border-b">
-              <span>Profile updated</span>
-              <span className="text-gray-500">Yesterday</span>
-            </li>
-            <li className="flex justify-between py-2 border-b">
-              <span>Email verified</span>
-              <span className="text-gray-500">2 days ago</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-      <Chat/>
     </div>
   );
 }

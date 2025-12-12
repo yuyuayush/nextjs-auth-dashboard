@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Toaster } from 'sonner';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,12 @@ export default function RootLayout({
               <h1 className="text-xl font-bold">Auth Dashboard</h1>
             </Link>
             <nav className="flex gap-4">
+              <Link href="/dashboard">
+                <Button variant="ghost">Dashboard</Button>
+              </Link>
+              <Link href="/chat">
+                <Button variant="ghost">Chat</Button>
+              </Link>
               <Link href="/auth/signin">
                 <Button variant="outline">Sign In</Button>
               </Link>
@@ -47,6 +54,7 @@ export default function RootLayout({
         <main>
           {children}
         </main>
+        <Toaster />
       </body>
     </html>
   );

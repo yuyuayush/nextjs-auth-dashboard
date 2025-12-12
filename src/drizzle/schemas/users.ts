@@ -1,5 +1,7 @@
 import { relations } from "drizzle-orm";
 import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { messages } from "./chat";
+import { posts } from "./posts";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -124,6 +126,12 @@ export const invitation = pgTable("invitation", {
     .references(() => user.id, { onDelete: "cascade" }),
 });
 
+export const usersRelations = relations(user, ({ many }) => ({
+  posts: many(posts),
+  sentMessages: many(messages, { relationName: "sentMessages" }),
+  receivedMessages: many(messages, { relationName: "receivedMessages" }),
+}));
+
 export const schema = {
   user,
   session,
@@ -134,4 +142,5 @@ export const schema = {
   invitation,
   organizationRelations,
   memberRelations,
+  usersRelations
 };
