@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
     try {
       const result = await authClient.requestPasswordReset({
         email,
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
+        redirectTo: `${process.env.APP_URL || 'http://localhost:3000'}/reset-password`,
       });
       console.info('forgetPassword result', result);
 

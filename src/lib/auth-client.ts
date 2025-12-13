@@ -5,7 +5,6 @@ import {
 
 export const authClient = createAuthClient({
     baseURL: process.env.APP_URL,
-
 })
 
 export const {

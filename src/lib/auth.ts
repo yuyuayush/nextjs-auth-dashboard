@@ -12,7 +12,7 @@ export const auth = betterAuth({
     trustedOrigins: [
         "http://localhost:3000",
         "https://nextjs-auth-dashboard-jz5tdhjus-yuyuayushs-projects.vercel.app", "https://nextjs-auth-dashboard-kappa.vercel.app", "/^https:\/\/nextjs-auth-dashboard-.*\.vercel\.app$/"
-        // add this
+    
     ],
 
     database: drizzleAdapter(db, {
