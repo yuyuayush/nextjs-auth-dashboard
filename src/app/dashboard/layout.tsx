@@ -23,8 +23,6 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-100">
-
-
       <main className=" ">
         {children}
       </main>
