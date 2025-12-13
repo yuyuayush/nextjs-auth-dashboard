@@ -19,6 +19,7 @@ interface PostUser {
 
 interface Post {
     id: string;
+    userId: string;
     imageUrl: string;
     caption: string | null;
     createdAt: Date;
