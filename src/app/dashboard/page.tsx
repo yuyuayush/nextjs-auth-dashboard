@@ -3,8 +3,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDashboardPosts } from "@/app/actions/post";
 import UserGallery from "@/components/dashboard/UserGallery";
-import CreatePost from "@/components/gallery/CreatePost";
 import ShareProfileButton from "@/components/dashboard/ShareProfileButton";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
@@ -18,39 +20,33 @@ export default async function DashboardPage() {
   const posts = await getDashboardPosts();
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
-      <div className="container mx-auto py-4 px-4">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-neutral-100 pb-20">
+      <div className="container mx-auto max-w-7xl py-12 px-4 md:px-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
-            <p className="text-gray-500 mt-1">Manage your gallery and uploads.</p>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Gallery</h1>
+            <p className="text-gray-500 mt-1">Manage, share, and organize your photo collection.</p>
           </div>
-          <div className="text-right flex flex-col items-end gap-2">
-            <div>
-              <p className="text-sm text-gray-900 font-medium">{session.user.name}</p>
-              <p className="text-xs text-text-gray-500">{session.user.email}</p>
-            </div>
+
+          <div className="flex items-center gap-4 w-full md:w-auto">
+
             <ShareProfileButton userId={session.user.id} />
+
+            <Link href="/dashboard/upload">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-full px-6">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload New
+              </Button>
+            </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Upload */}
-          <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Upload Photos</h2>
-              <CreatePost />
-            </div>
-          </div>
-
-          {/* Right Column: Gallery */}
-          <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-xl font-semibold text-gray-800">My Gallery</h2>
-            <UserGallery posts={posts} />
-          </div>
+        {/* Gallery Section */}
+        <div className="min-h-[500px]">
+          <UserGallery posts={posts} />
         </div>
       </div>
-
     </div>
   );
 }

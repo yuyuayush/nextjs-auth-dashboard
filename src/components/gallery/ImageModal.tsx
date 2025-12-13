@@ -20,7 +20,7 @@ interface ImageModalProps {
         caption?: string | null;
         isPublic?: boolean;
         createdAt: Date;
-        user: { name: string };
+        user: { name: string; image?: string | null };
     } | null;
 }
 
@@ -62,31 +62,26 @@ export default function ImageModal({ isOpen, onClose, post }: ImageModalProps) {
     };
 
     const handleShare = async () => {
-        let text = post.caption || 'Awesome image from the gallery';
+        let text = post.caption || 'Check out this image!';
         let url = window.location.href;
 
-        // If private and owner, generate share token
         if (!isPublic && isOwner) {
             try {
-                toast.loading("Generating share link...");
+                toast.loading("Generating link...");
                 const token = await generateShareToken();
                 url = `${window.location.origin}/gallery/${post.userId}?token=${token}`;
                 text = `Check out my private gallery!`;
                 toast.dismiss();
             } catch (e) {
                 toast.dismiss();
-                toast.error("Failed to generate share link");
+                toast.error("Failed to generate link");
                 return;
             }
         }
 
         if (navigator.share) {
             try {
-                await navigator.share({
-                    title: 'Check out this image!',
-                    text: text,
-                    url: url,
-                });
+                await navigator.share({ title: 'Image Share', text, url });
                 toast.success("Shared successfully");
             } catch (error) {
                 console.log("Error sharing", error);
@@ -113,16 +108,14 @@ export default function ImageModal({ isOpen, onClose, post }: ImageModalProps) {
         }
     };
 
-    const handleDeleteClick = () => {
-        setShowDeleteConfirm(true);
-    };
+    const handleDeleteClick = () => setShowDeleteConfirm(true);
 
     const confirmDelete = async () => {
         setIsDeleting(true);
         try {
             const result = await deletePosts([post.id]);
             if (result.success) {
-                toast.success("Post deleted successfully");
+                toast.success("Post deleted");
                 onClose();
                 router.refresh();
             }
@@ -138,131 +131,161 @@ export default function ImageModal({ isOpen, onClose, post }: ImageModalProps) {
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-2xl p-4 overflow-y-auto" onClick={onClose}>
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="relative max-w-5xl w-full max-h-[90vh] bg-transparent rounded-xl overflow-hidden shadow-2xl flex flex-col md:flex-row"
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 30 }}
+                        className="relative w-full max-w-5xl bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/10 my-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <button
+                        {/* Close Button - Floating */}
+                        <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
                             onClick={onClose}
-                            className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full text-white hover:bg-white/20 transition-colors"
+                            className="absolute top-6 right-6 z-50 p-2.5 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-md border border-white/10 transition-all hover:scale-110 active:scale-95 group"
                         >
-                            <X className="w-6 h-6" />
-                        </button>
+                            <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                        </motion.button>
 
-                        {/* Image Container */}
-                        <div className="flex-1 relative bg-black flex items-center justify-center min-h-[50vh] md:min-h-full">
-                            <div className="relative w-full h-full min-h-[50vh]">
+                        {/* Image Section - Cinematic */}
+                        <div className="w-full relative bg-black/95 group flex flex-col items-center justify-center">
+                            <div className="relative w-full h-[50vh] md:h-[70vh] bg-zinc-950">
                                 <Image
                                     src={post.imageUrl}
-                                    alt={post.caption || 'Full size image'}
+                                    alt={post.caption || 'Full view'}
                                     fill
                                     className="object-contain"
+                                    quality={100}
+                                    priority
                                 />
                             </div>
                         </div>
 
-                        {/* Sidebar */}
-                        <div className="bg-white w-full md:w-80 p-6 flex flex-col justify-between shrink-0">
-                            <div>
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                        {post.user.name.charAt(0).toUpperCase()}
+                        {/* Details Section - Clean & Modern */}
+                        <div className="w-full bg-white flex flex-col p-6 md:p-8 xl:p-10">
+                            <div className="max-w-4xl mx-auto w-full">
+                                {/* Header: User Info & Meta */}
+                                <div className="flex items-start justify-between gap-6 mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative w-14 h-14 rounded-full overflow-hidden bg-gray-100 ring-4 ring-gray-50 shadow-sm">
+                                            {post.user.image ? (
+                                                <Image src={post.user.image} alt={post.user.name} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-blue-600 font-bold bg-blue-50 text-xl">
+                                                    {post.user.name.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 text-lg tracking-tight">{post.user.name}</h3>
+                                            <p className="text-sm text-gray-500 font-medium">{new Date(post.createdAt).toLocaleDateString(undefined, {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">{post.user.name}</p>
-                                        <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</p>
+
+                                    {/* Desktop Quick Actions */}
+                                    <div className="hidden md:flex gap-3">
+                                        <Button
+                                            onClick={handleDownload}
+                                            variant="outline"
+                                            className="rounded-full border-gray-200 hover:bg-gray-50 hover:border-gray-300 h-10 px-5"
+                                        >
+                                            <Download className="w-4 h-4 mr-2" /> Download
+                                        </Button>
+                                        <Button
+                                            onClick={handleShare}
+                                            className="rounded-full bg-zinc-900 text-white hover:bg-black h-10 px-5 shadow-lg shadow-zinc-900/10"
+                                        >
+                                            <Share2 className="w-4 h-4 mr-2" /> Share
+                                        </Button>
                                     </div>
                                 </div>
 
-                                {post.caption && (
-                                    <div className="mb-6">
-                                        <p className="text-gray-700 leading-relaxed">{post.caption}</p>
-                                    </div>
-                                )}
+                                {/* Caption & Content */}
+                                <div className="mb-10 pl-1">
+                                    <p className="text-gray-700 text-lg leading-relaxed font-light">
+                                        {post.caption || <span className="text-gray-300 italic">No caption provided.</span>}
+                                    </p>
+                                </div>
 
-                                {/* Privacy Status / Toggle */}
-                                <div className="mb-6 p-4 rounded-lg bg-gray-50 border">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-sm font-medium text-gray-700">Visibility</span>
-                                        {isPublic ? (
-                                            <span className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-100">
-                                                <Globe className="w-3 h-3 mr-1" /> Public
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-100">
-                                                <Lock className="w-3 h-3 mr-1" /> Private
-                                            </span>
-                                        )}
+                                {/* Privacy & Delete Actions */}
+                                <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                                    <div className="flex items-center gap-3 w-full md:w-auto">
+                                        <div className={cn(
+                                            "flex items-center gap-2.5 px-4 py-2 rounded-full border text-sm font-medium transition-colors",
+                                            isPublic
+                                                ? "bg-green-50 border-green-100 text-green-700"
+                                                : "bg-amber-50 border-amber-100 text-amber-700"
+                                        )}>
+                                            {isPublic ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                            {isPublic ? "Public Visible" : "Private Only"}
+                                        </div>
+                                    </div>
+
+                                    {/* Mobile Actions */}
+                                    <div className="grid grid-cols-2 gap-3 w-full md:hidden">
+                                        <Button onClick={handleDownload} variant="outline" className="w-full rounded-xl h-11">
+                                            <Download className="w-4 h-4 mr-2" /> Save
+                                        </Button>
+                                        <Button onClick={handleShare} className="w-full rounded-xl bg-zinc-900 h-11">
+                                            <Share2 className="w-4 h-4 mr-2" /> Share
+                                        </Button>
                                     </div>
 
                                     {isOwner && (
-                                        <Button
-                                            onClick={handlePrivacyToggle}
-                                            disabled={isUpdating}
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full text-xs h-8"
-                                        >
-                                            {isUpdating ? (
-                                                <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                                            <div className="h-4 w-px bg-gray-200 mx-2 hidden md:block" />
+
+                                            <Button
+                                                variant="ghost"
+                                                onClick={handlePrivacyToggle}
+                                                disabled={isUpdating}
+                                                className="text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-full px-4"
+                                            >
+                                                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (isPublic ? <Lock className="w-4 h-4 mr-2" /> : <Globe className="w-4 h-4 mr-2" />)}
+                                                {isPublic ? "Make Private" : "Make Public"}
+                                            </Button>
+
+                                            {showDeleteConfirm ? (
+                                                <div className="flex items-center gap-2 bg-red-50 p-1.5 rounded-full border border-red-100 animate-in slide-in-from-right-2">
+                                                    <span className="text-xs text-red-600 font-medium px-3">Confirm?</span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setShowDeleteConfirm(false)}
+                                                        className="h-7 w-7 rounded-full p-0 text-red-600 hover:bg-red-100"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={confirmDelete}
+                                                        disabled={isDeleting}
+                                                        className="h-7 px-3 rounded-full text-xs"
+                                                    >
+                                                        Yes
+                                                    </Button>
+                                                </div>
                                             ) : (
-                                                isPublic ? <Lock className="w-3 h-3 mr-2" /> : <Globe className="w-3 h-3 mr-2" />
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={handleDeleteClick}
+                                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full px-4"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                                </Button>
                                             )}
-                                            {isUpdating ? "Updating..." : (isPublic ? "Make Private" : "Make Public")}
-                                        </Button>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-
-                            <div className="flex flex-col gap-3 mt-auto">
-                                {showDeleteConfirm ? (
-                                    <div className="p-4 bg-red-50 rounded-lg border border-red-100">
-                                        <p className="text-sm text-red-800 font-medium mb-3 text-center">
-                                            Delete this post permanently?
-                                        </p>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => setShowDeleteConfirm(false)}
-                                                className="flex-1 bg-white hover:bg-red-50 text-red-700 border-red-200"
-                                                size="sm"
-                                            >
-                                                Cancel
-                                            </Button>
-                                            <Button
-                                                variant="destructive"
-                                                onClick={confirmDelete}
-                                                disabled={isDeleting}
-                                                className="flex-1"
-                                                size="sm"
-                                            >
-                                                {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Confirm"}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <Button onClick={handleDownload} variant="outline" className="w-full flex items-center gap-2">
-                                            <Download className="w-4 h-4" /> Download
-                                        </Button>
-                                        <Button onClick={handleShare} className="w-full flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
-                                            <Share2 className="w-4 h-4" /> Share
-                                        </Button>
-                                        {isOwner && (
-                                            <Button
-                                                onClick={handleDeleteClick}
-                                                variant="destructive"
-                                                className="w-full flex items-center gap-2"
-                                            >
-                                                <Trash2 className="w-4 h-4" /> Delete Post
-                                            </Button>
-                                        )}
-                                    </>
-                                )}
                             </div>
                         </div>
                     </motion.div>
@@ -271,3 +294,5 @@ export default function ImageModal({ isOpen, onClose, post }: ImageModalProps) {
         </AnimatePresence>
     );
 }
+
+import { cn } from '@/lib/utils';
