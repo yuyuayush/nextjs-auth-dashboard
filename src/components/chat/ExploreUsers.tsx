@@ -38,7 +38,7 @@ export default function ExploreUsers({ users }: { users: UserWithStatus[] }) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+        <div className="grid grid-cols-1 gap-4 p-4">
             {stragers.map(user => (
                 <div key={user.id} className="bg-white p-4 rounded-xl shadow-sm border flex items-center justify-between">
                     <div className="flex items-center gap-3">

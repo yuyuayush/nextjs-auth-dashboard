@@ -26,6 +26,7 @@ export default function UserButton({ user }: UserButtonProps) {
 
     const handleSignOut = async () => {
         await authClient.signOut();
+        router.push("/");
         router.refresh();
     };
 

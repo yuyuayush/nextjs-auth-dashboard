@@ -5,10 +5,10 @@ import { messages, user } from "@/drizzle/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { or, and, eq, asc, ne } from "drizzle-orm";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { utapi } from "@/lib/uploadthing";
 
 export async function getUsers() {
+    // ... same code ...
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -22,7 +22,8 @@ export async function getUsers() {
     return allUsers;
 }
 
-export async function sendMessage(receiverId: string, content: string, attachmentUrl?: string) {
+export async function sendMessage(receiverId: string, content: string, attachmentUrl?: string, attachmentType?: string) {
+    // ... same code ...
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -35,13 +36,15 @@ export async function sendMessage(receiverId: string, content: string, attachmen
         senderId: session.user.id,
         receiverId,
         content,
-        attachmentUrl
+        attachmentUrl,
+        attachmentType
     });
 
     return { success: true };
 }
 
 export async function getMessages(otherUserId: string) {
+    // ... same code ...
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -67,7 +70,7 @@ export async function getMessages(otherUserId: string) {
     return chatMessages;
 }
 
-export async function uploadChatImage(formData: FormData) {
+export async function uploadChatAttachment(formData: FormData) {
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -76,20 +79,23 @@ export async function uploadChatImage(formData: FormData) {
         throw new Error("Unauthorized");
     }
 
+    if (!process.env.UPLOADTHING_TOKEN) {
+        throw new Error("Server configuration error: Missing UPLOADTHING_TOKEN");
+    }
+
     const file = formData.get("file") as File;
     if (!file) throw new Error("No file provided");
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `chat-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "chat");
+    // Upload to UploadThing
+    const response = await utapi.uploadFiles(file);
 
-    try {
-        await fs.access(uploadDir);
-    } catch {
-        await fs.mkdir(uploadDir, { recursive: true });
+    if (response.error) {
+        throw new Error(response.error.message);
     }
 
-    await fs.writeFile(path.join(uploadDir, filename), buffer);
+    let type = 'document';
+    if (file.type.startsWith('image/')) type = 'image';
+    else if (file.type.startsWith('video/')) type = 'video';
 
-    return { url: `/uploads/chat/${filename}` };
+    return { url: response.data.url, type };
 }

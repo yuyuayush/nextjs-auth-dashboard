@@ -5,10 +5,9 @@ import { posts } from "@/drizzle/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { inArray, eq, and, or } from "drizzle-orm";
 import { shareTokens } from "@/drizzle/schema";
+import { utapi } from "@/lib/uploadthing";
 
 export async function deletePosts(postIds: string[]) {
     const session = await auth.api.getSession({
@@ -29,13 +28,14 @@ export async function deletePosts(postIds: string[]) {
         )
     });
 
-    // 2. Delete files
-    const uploadDir = path.join(process.cwd(), "public");
+    // 2. Delete files from UploadThing
     await Promise.all(postsToDelete.map(async (post) => {
         try {
-            await fs.unlink(path.join(uploadDir, post.imageUrl));
+            // Extract key from URL (assuming https://utfs.io/f/KEY format)
+            const key = post.imageUrl.substring(post.imageUrl.lastIndexOf("/") + 1);
+            if (key) await utapi.deleteFiles(key);
         } catch (e) {
-            console.error("Failed to delete file", e);
+            console.error("Failed to delete file from uploadthing", e);
         }
     }));
 
@@ -60,6 +60,10 @@ export async function createPost(formData: FormData) {
         throw new Error("Unauthorized");
     }
 
+    if (!process.env.UPLOADTHING_TOKEN) {
+        return { success: false, error: "Server configuration error: Missing UPLOADTHING_TOKEN" };
+    }
+
     // Get all files with the name "image"
     const files = formData.getAll("image") as File[];
     const caption = formData.get("caption") as string;
@@ -69,15 +73,8 @@ export async function createPost(formData: FormData) {
         throw new Error("No images provided");
     }
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-
-    try {
-        await fs.access(uploadDir);
-    } catch {
-        await fs.mkdir(uploadDir, { recursive: true });
-    }
-
     let successCount = 0;
+    const errors: string[] = [];
 
     // Process all files in parallel
     await Promise.all(
@@ -86,24 +83,34 @@ export async function createPost(formData: FormData) {
                 return; // Skip invalid files
             }
 
-            const buffer = Buffer.from(await file.arrayBuffer());
-            const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
-            const filepath = path.join(uploadDir, filename);
+            try {
+                // Upload to UploadThing
+                const response = await utapi.uploadFiles(file);
 
-            await fs.writeFile(filepath, buffer);
+                if (response.error) {
+                    console.error("UploadThing error", response.error);
+                    errors.push(response.error.message);
+                    return;
+                }
 
-            const imageUrl = `/uploads/${filename}`;
+                await db.insert(posts).values({
+                    userId: session.user.id,
+                    imageUrl: response.data.url,
+                    caption: caption,
+                    isPublic,
+                });
 
-            await db.insert(posts).values({
-                userId: session.user.id,
-                imageUrl,
-                caption: caption,
-                isPublic,
-            });
-
-            successCount++;
+                successCount++;
+            } catch (e) {
+                console.error("Upload exception", e);
+                errors.push("Unknown upload error");
+            }
         })
     );
+
+    if (successCount === 0) {
+        return { success: false, error: errors[0] || "Failed to upload any images" };
+    }
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -191,4 +198,32 @@ export async function getDashboardPosts() {
         orderBy: (posts, { desc }) => [desc(posts.createdAt)],
     });
     return userPosts;
+}
+export async function togglePostPrivacy(postId: string, isPublic: boolean) {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
+    // Check ownership
+    const post = await db.query.posts.findFirst({
+        where: (posts, { and, eq }) => and(eq(posts.id, postId), eq(posts.userId, session.user.id))
+    });
+
+    if (!post) {
+        throw new Error("Post not found or unauthorized");
+    }
+
+    await db.update(posts)
+        .set({ isPublic })
+        .where(eq(posts.id, postId));
+
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    revalidatePath(`/gallery/${session.user.id}`);
+
+    return { success: true };
 }

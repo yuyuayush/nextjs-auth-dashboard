@@ -8,6 +8,7 @@ export const messages = pgTable("messages", {
     receiverId: text("receiver_id").notNull().references(() => user.id, { onDelete: "cascade" }),
     content: text("content").notNull(),
     attachmentUrl: text("attachment_url"),
+    attachmentType: text("attachment_type"), // 'image', 'video', 'document', etc.
     createdAt: timestamp("created_at").$defaultFn(() => new Date()).notNull(),
 });
 

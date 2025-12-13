@@ -229,10 +229,7 @@ export default function UserGallery({ posts }: { posts: Post[] }) {
             <ImageModal
                 isOpen={!!selectedPost}
                 onClose={() => setSelectedPost(null)}
-                imageUrl={selectedPost?.imageUrl || ''}
-                caption={selectedPost?.caption}
-                user={selectedPost?.user}
-                createdAt={selectedPost?.createdAt}
+                post={selectedPost}
             />
         </div>
     );

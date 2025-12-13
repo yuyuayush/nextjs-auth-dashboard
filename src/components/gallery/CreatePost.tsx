@@ -8,25 +8,61 @@ import { createPost } from '@/app/actions/post';
 import { toast } from 'sonner';
 import { Loader2, Upload, Images, Globe, Lock } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
+import imageCompression from 'browser-image-compression';
 
 export default function CreatePost() {
     const [loading, setLoading] = useState(false);
     const [fileCount, setFileCount] = useState(0);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    async function handleSubmit(formData: FormData) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) { // Changed to FormEvent handler
+        e.preventDefault(); // Prevent default since we handle it manually
         setLoading(true);
+        toast.loading("Compressing images...");
+
         try {
-            const res = await createPost(formData);
+            const form = e.currentTarget;
+            const formData = new FormData(form);
+            const originalFiles = formData.getAll("image") as File[];
+            const caption = formData.get("caption");
+            const isPublic = formData.get("isPublic");
+
+            // Compress images
+            const compressedFiles = await Promise.all(
+                originalFiles.map(async (file) => {
+                    if (!file.type.startsWith("image/")) return file;
+                    // Compression options: max 1MB, max dimension 1920px
+                    return await imageCompression(file, {
+                        maxSizeMB: 1,
+                        maxWidthOrHeight: 1920,
+                        useWebWorker: true
+                    });
+                })
+            );
+
+            // Create new FormData with compressed files
+            const newFormData = new FormData();
+            compressedFiles.forEach(file => newFormData.append("image", file));
+            if (caption) newFormData.append("caption", caption);
+            if (isPublic) newFormData.append("isPublic", isPublic);
+
+            toast.dismiss();
+            toast.loading("Uploading...");
+
+            const res = await createPost(newFormData);
+
+            toast.dismiss();
             if (res.success) {
                 toast.success(res.count ? `Successfully uploaded ${res.count} photos!` : 'Post created successfully!');
-                const form = document.getElementById('create-post-form') as HTMLFormElement;
-                form?.reset();
+                form.reset();
                 setFileCount(0);
                 setPreviewUrl(null);
+            } else {
+                toast.error(res.error || 'Failed to create post');
             }
         } catch (error) {
-            toast.error('Failed to create post');
+            toast.dismiss();
+            toast.error('An unexpected error occurred');
             console.error(error);
         } finally {
             setLoading(false);
@@ -49,7 +85,7 @@ export default function CreatePost() {
     };
 
     return (
-        <form id="create-post-form" action={handleSubmit} className="space-y-6">
+        <form id="create-post-form" onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
                 <Label htmlFor="image">Photos</Label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors cursor-pointer relative bg-gray-50/50 hover:bg-blue-50/50 overflow-hidden min-h-[200px]">

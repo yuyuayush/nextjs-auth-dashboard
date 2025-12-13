@@ -5,13 +5,20 @@ import { Button } from "@/components/ui/button";
 import UserButton from "@/components/layout/UserButton";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
 
 interface NavbarProps {
     session: any;
 }
 
-export default function Navbar({ session }: NavbarProps) {
+export default function Navbar({ session: initialSession }: NavbarProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const { data: session } = useSession(); // Use client-side session for dynamic updates
+
+    // Fallback to initialSession if client session triggers loading (optional, but hook usually handles it well) 
+    // better-auth's useSession returns null/data. 
+    // We can use the hook's data as the primary source of truth for the UI state.
+    const currentSession = session || initialSession;
 
     return (
         <header className="p-4 border-b bg-white relative z-50">
@@ -22,7 +29,7 @@ export default function Navbar({ session }: NavbarProps) {
 
                 {/* Desktop Nav */}
                 <nav className="hidden md:flex items-center gap-4">
-                    {session ? (
+                    {currentSession ? (
                         <>
                             <Link href="/chat">
                                 <Button variant="ghost">Chat</Button>
@@ -30,7 +37,7 @@ export default function Navbar({ session }: NavbarProps) {
                             <Link href="/dashboard">
                                 <Button variant="ghost">Dashboard</Button>
                             </Link>
-                            <UserButton user={session.user} />
+                            <UserButton user={currentSession.user} />
                         </>
                     ) : (
                         <>
@@ -53,11 +60,11 @@ export default function Navbar({ session }: NavbarProps) {
             {/* Mobile Nav */}
             {isOpen && (
                 <div className="absolute top-full left-0 w-full bg-white border-b shadow-lg flex flex-col p-4 gap-4 md:hidden">
-                    {session ? (
+                    {currentSession ? (
                         <>
                             <div className="flex items-center gap-2 pb-2 border-b">
-                                <UserButton user={session.user} />
-                                <span className="font-semibold">{session.user.name}</span>
+                                <UserButton user={currentSession.user} />
+                                <span className="font-semibold">{currentSession.user.name}</span>
                             </div>
                             <Link href="/chat" onClick={() => setIsOpen(false)}>
                                 <Button variant="ghost" className="w-full justify-start">Chat</Button>
