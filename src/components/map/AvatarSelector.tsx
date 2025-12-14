@@ -29,7 +29,7 @@ export default function AvatarSelector({ currentAvatar, onAvatarUpdate }: { curr
     };
 
     return (
-        <div className="absolute top-20 left-4 z-[1000]">
+        <div className="absolute top-20 left-4 z-[2000]">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="bg-white p-2 rounded shadow-md font-semibold text-sm hover:bg-gray-100"

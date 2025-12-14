@@ -9,6 +9,7 @@ import { useSession } from '@/lib/auth-client';
 import { useState, useEffect } from 'react';
 import { togglePostPrivacy, deletePosts, generateShareToken } from '@/app/actions/post';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface ImageModalProps {
     isOpen: boolean;
@@ -171,23 +172,25 @@ export default function ImageModal({ isOpen, onClose, post }: ImageModalProps) {
                                 {/* Header: User Info & Meta */}
                                 <div className="flex items-start justify-between gap-6 mb-8">
                                     <div className="flex items-center gap-4">
-                                        <div className="relative w-14 h-14 rounded-full overflow-hidden bg-gray-100 ring-4 ring-gray-50 shadow-sm">
-                                            {post.user.image ? (
-                                                <Image src={post.user.image} alt={post.user.name} fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-blue-600 font-bold bg-blue-50 text-xl">
-                                                    {post.user.name.charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-900 text-lg tracking-tight">{post.user.name}</h3>
-                                            <p className="text-sm text-gray-500 font-medium">{new Date(post.createdAt).toLocaleDateString(undefined, {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}</p>
-                                        </div>
+                                        <Link href={`/user/${post.userId}`} className="group flex items-center gap-4">
+                                            <div className="relative w-14 h-14 rounded-full overflow-hidden bg-gray-100 ring-4 ring-gray-50 shadow-sm transition-transform group-hover:scale-105">
+                                                {post.user.image ? (
+                                                    <Image src={post.user.image} alt={post.user.name} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-blue-600 font-bold bg-blue-50 text-xl">
+                                                        {post.user.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 text-lg tracking-tight group-hover:text-blue-600 transition-colors">{post.user.name}</h3>
+                                                <p className="text-sm text-gray-500 font-medium">{new Date(post.createdAt).toLocaleDateString(undefined, {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}</p>
+                                            </div>
+                                        </Link>
                                     </div>
 
                                     {/* Desktop Quick Actions */}
@@ -240,7 +243,7 @@ export default function ImageModal({ isOpen, onClose, post }: ImageModalProps) {
                                     </div>
 
                                     {isOwner && (
-                                        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                                        <div className="flex items-center gap-3 w-full md:w-auto md:justify-end justify-between px-5 md:px-0">
                                             <div className="h-4 w-px bg-gray-200 mx-2 hidden md:block" />
 
                                             <Button

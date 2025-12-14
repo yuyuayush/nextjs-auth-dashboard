@@ -13,6 +13,8 @@ export const user = pgTable("user", {
   image: text("image"),
   latitude: text("latitude"), // Storing as text for simplicity, or real/double precision
   longitude: text("longitude"),
+  birthday: timestamp("birthday"),
+  address: text("address"),
   createdAt: timestamp("created_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),

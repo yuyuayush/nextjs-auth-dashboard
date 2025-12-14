@@ -4,8 +4,10 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import L from "leaflet";
-import { getFriendsLocations, updateUserLocation } from "@/app/actions/location";
+import { getFriendsLocations, updateUserLocation, getMyLocation } from "@/app/actions/location";
 import AvatarSelector from "./AvatarSelector";
+import { useSession } from "@/lib/auth-client";
+import { getDebugFriendLocationData } from "@/app/actions/debug-map";
 
 // Fix for default Leaflet markers in Next.js/Webpack
 // @ts-ignore
@@ -24,6 +26,24 @@ interface Friend {
     longitude: number;
 }
 
+// Helper functions moved to module scope
+const getInitials = (name: string) => {
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+};
+
+const getRandomColor = (name: string) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+    return "#" + "00000".substring(0, 6 - c.length) + c;
+};
+
 // Controller to handle automatic recentering
 function RecenterController({ position }: { position: [number, number] | null }) {
     const map = useMap();
@@ -36,7 +56,7 @@ function RecenterController({ position }: { position: [number, number] | null })
 }
 
 // Global Controller for Buttons inside Map Context
-function MapControllers({ onUpdateLocation, onRecenter }: { onUpdateLocation: () => void, onRecenter: () => void }) {
+function MapControllers({ onUpdateLocation, onRecenter, onDebug, showDebugButton }: { onUpdateLocation: () => void, onRecenter: () => void, onDebug: () => void, showDebugButton: boolean }) {
     return (
         <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
             <button
@@ -51,6 +71,79 @@ function MapControllers({ onUpdateLocation, onRecenter }: { onUpdateLocation: ()
             >
                 🎯 Recenter
             </button>
+            {showDebugButton && (
+                <button
+                    onClick={onDebug}
+                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 font-semibold text-sm shadow-md"
+                >
+                    🐞 Debug
+                </button>
+            )}
+        </div>
+    );
+}
+
+// Inner component extracted to top level
+function MapButtons({
+    onUpdateLocation,
+    handleUpdateLocation,
+    onDebug,
+    position
+}: {
+    onUpdateLocation: () => void,
+    handleUpdateLocation: () => void,
+    onDebug: () => void,
+    position: [number, number] | null
+}) {
+    const map = useMap();
+    const { data: session } = useSession(); // Access session here
+    const showDebugButton = session?.user?.email === "ayushnegi1912@gmail.com";
+
+    return (
+        <MapControllers
+            onUpdateLocation={onUpdateLocation}
+            onRecenter={() => {
+                if (position) map.flyTo(position, 13);
+                else handleUpdateLocation(); // If no position, try to fetch it
+            }}
+            onDebug={onDebug}
+            showDebugButton={showDebugButton}
+        />
+    );
+}
+
+// FriendListController extracted to top level
+function FriendListController({ friends }: { friends: Friend[] }) {
+    const map = useMap();
+
+    if (friends.length === 0) return null;
+
+    return (
+        <div className="absolute top-36 left-4 z-[1000] bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-md max-h-[300px] overflow-y-auto w-64 border border-gray-200">
+            <h3 className="font-bold text-sm mb-2 text-gray-700">Friends Nearby</h3>
+            <div className="flex flex-col gap-2">
+                {friends.map((friend) => (
+                    <button
+                        key={friend.id}
+                        onClick={() => map.flyTo([friend.latitude, friend.longitude], 15)}
+                        className="flex items-center gap-2 p-2 rounded hover:bg-blue-50 transition-colors text-left"
+                    >
+                        {friend.image ? (
+                            <img src={friend.image} alt={friend.name} className="w-8 h-8 rounded-full object-cover border border-gray-300" />
+                        ) : (
+                            <div
+                                className="w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-bold"
+                                style={{ backgroundColor: getRandomColor(friend.name) }}
+                            >
+                                {getInitials(friend.name)}
+                            </div>
+                        )}
+                        <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-gray-800">{friend.name}</span>
+                        </div>
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }
@@ -59,6 +152,14 @@ export default function MapComponent() {
     const [position, setPosition] = useState<[number, number] | null>(null);
     const [friends, setFriends] = useState<Friend[]>([]);
     const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
+    const [debugData, setDebugData] = useState<any>(null);
+    const [showDebug, setShowDebug] = useState(false);
+
+    const handleDebug = async () => {
+        const data = await getDebugFriendLocationData();
+        setDebugData(data);
+        setShowDebug(true);
+    };
 
     const handleUpdateLocation = () => {
         if (!navigator.geolocation) {
@@ -74,23 +175,46 @@ export default function MapComponent() {
                 updateUserLocation(latitude, longitude)
                     .then(() => {
                         console.log("Location updated");
-                        getFriendsLocations().then(setFriends).catch(console.error);
+                        // We rely on the periodic fetch now, or we can trigger one immediately
                     })
                     .catch((err) => console.error("Failed to save location", err));
             },
             (err) => {
                 console.error(err);
                 alert("Unable to retrieve your location");
-                // For debug: set a dummy location if local fails
-                // setPosition([51.505, -0.09]);
             }
         );
     };
 
     useEffect(() => {
-        getFriendsLocations().then(setFriends).catch(console.error);
-        // Try getting location on mount
+        // 1. Fetch Stored Location immediately so marker shows up
+        getMyLocation().then((loc) => {
+            if (loc) {
+                console.log("Loaded stored location:", loc);
+                setPosition([loc.latitude, loc.longitude]);
+                if (loc.image) setCurrentAvatar(loc.image);
+            }
+        });
+
+        const fetchFriends = () => {
+            getFriendsLocations()
+                .then((data) => {
+                    console.log("Fetched friends:", data.length);
+                    setFriends(data);
+                })
+                .catch(console.error);
+        };
+
+        fetchFriends(); // Initial fetch
+
+        // 2. Try getting live location (refinement) - only if we don't have a position yet? 
+        // Or always to update? For now, we call it to update fresh stats.
         handleUpdateLocation();
+
+        // 3. Poll every 30 seconds
+        const intervalId = setInterval(fetchFriends, 30000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -108,23 +232,6 @@ export default function MapComponent() {
 
     const deg2rad = (deg: number) => {
         return deg * (Math.PI / 180);
-    };
-
-    const getInitials = (name: string) => {
-        const parts = name.split(" ");
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return name.slice(0, 2).toUpperCase();
-    };
-
-    const getRandomColor = (name: string) => {
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const c = (hash & 0x00ffffff).toString(16).toUpperCase();
-        return "#" + "00000".substring(0, 6 - c.length) + c;
     };
 
     const getMarkerIcon = (friend: Friend | null, isUser: boolean = false) => {
@@ -150,20 +257,6 @@ export default function MapComponent() {
         });
     };
 
-    // Inner component to access map instance for buttons
-    function MapButtons() {
-        const map = useMap();
-        return (
-            <MapControllers
-                onUpdateLocation={handleUpdateLocation}
-                onRecenter={() => {
-                    if (position) map.flyTo(position, 13);
-                    else handleUpdateLocation();
-                }}
-            />
-        );
-    }
-
     return (
         <div className="relative h-[80vh] w-full rounded-lg overflow-hidden border">
             <AvatarSelector
@@ -184,7 +277,15 @@ export default function MapComponent() {
                 />
 
                 <RecenterController position={position} />
-                <MapButtons />
+
+                <MapButtons
+                    onUpdateLocation={handleUpdateLocation}
+                    handleUpdateLocation={handleUpdateLocation}
+                    onDebug={handleDebug}
+                    position={position}
+                />
+
+                <FriendListController friends={friends} />
 
                 {position && (
                     <Marker position={position} icon={getMarkerIcon(null, true)}>
@@ -221,6 +322,24 @@ export default function MapComponent() {
                     </Marker>
                 ))}
             </MapContainer>
+
+            {/* Debug Modal */}
+            {showDebug && (
+                <div className="absolute inset-0 z-[2000] bg-black/50 flex items-center justify-center p-4">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-lg">Debug Info</h3>
+                            <button onClick={() => setShowDebug(false)} className="text-red-500 font-bold">Close</button>
+                        </div>
+                        <pre className="text-xs bg-gray-100 p-2 rounded overflow-x-auto">
+                            {JSON.stringify(debugData, null, 2)}
+                        </pre>
+                        <div className="mt-4 text-sm text-gray-600">
+                            <p><strong>Note:</strong> Only friends with "has_location: true" will appear on the map.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -7,7 +7,13 @@ export async function middleware(req: NextRequest) {
 
   console.log({ session });
 
-  if (!session) {
+  const isAuthPage = req.nextUrl.pathname.startsWith("/auth/signin") || req.nextUrl.pathname.startsWith("/auth/signup");
+
+  if (isAuthPage && session) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  if (!session && !isAuthPage) {
     return NextResponse.redirect(new URL("/auth/signin", req.url));
   }
 
@@ -15,5 +21,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/chat/:path*", "/map/:path*"],
+  matcher: ["/dashboard/:path*", "/chat/:path*", "/map/:path*", "/auth/:path*"],
 };

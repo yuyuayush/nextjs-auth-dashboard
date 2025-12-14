@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { signUp } from "@/lib/auth-client";
+import { signUp, useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -25,6 +25,13 @@ export default function SignUp() {
 	const [password, setPassword] = useState("");
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
+	const { data: session } = useSession();
+
+	useEffect(() => {
+		if (session) {
+			router.push("/dashboard");
+		}
+	}, [session, router]);
 
 	return (
 		<Card className="z-50 rounded-md rounded-t-none max-w-md">

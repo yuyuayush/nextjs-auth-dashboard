@@ -23,6 +23,8 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@sendgrid/mail": "^8.1.6",
+    "@stream-io/node-sdk": "^0.7.26",
+    "@stream-io/video-react-sdk": "^1.28.2",
     "@tanstack/ai": "^0.0.3",
     "@tanstack/ai-openai": "^0.0.3",
     "@tanstack/ai-react": "^0.0.3",

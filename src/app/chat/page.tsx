@@ -15,8 +15,8 @@ export default async function ChatPage() {
     const usersWithStatus = await getAllUsersWithStatus();
 
     return (
-        <div className="h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-6xl h-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+        <div className="h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 flex items-center justify-center md:p-4">
+            <div className="w-full max-w-6xl h-full bg-white md:rounded-2xl md:shadow-xl overflow-hidden md:border border-gray-200">
                 <ChatInterface
                     initialUsers={usersWithStatus}
                     currentUserId={session.user.id}

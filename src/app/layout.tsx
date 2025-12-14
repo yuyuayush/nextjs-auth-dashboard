@@ -7,6 +7,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
+import VideoCallProvider from "@/components/chat/VideoCallProvider";
+import "@stream-io/video-react-sdk/dist/css/styles.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,10 +39,12 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar session={session} />
-        <main>
-          {children}
-        </main>
+        <VideoCallProvider>
+          <Navbar session={session} />
+          <main>
+            {children}
+          </main>
+        </VideoCallProvider>
         <Toaster />
       </body>
     </html>

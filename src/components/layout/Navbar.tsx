@@ -40,6 +40,9 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
                             <Link href="/dashboard">
                                 <Button variant="ghost">Dashboard</Button>
                             </Link>
+                            <Link href="/profile">
+                                <Button variant="ghost">Profile</Button>
+                            </Link>
                             <UserButton user={currentSession.user} />
                         </>
                     ) : (
@@ -77,6 +80,9 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
                             </Link>
                             <Link href="/dashboard" onClick={() => setIsOpen(false)}>
                                 <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
+                            </Link>
+                            <Link href="/profile" onClick={() => setIsOpen(false)}>
+                                <Button variant="ghost" className="w-full justify-start">Profile</Button>
                             </Link>
                             <Button
                                 variant="ghost"

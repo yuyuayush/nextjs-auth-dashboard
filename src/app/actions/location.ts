@@ -73,3 +73,25 @@ export async function getFriendsLocations() {
         longitude: parseFloat(u.longitude!),
     }));
 }
+
+export async function getMyLocation() {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) return null;
+
+    const currentUser = await db.query.user.findFirst({
+        where: eq(user.id, session.user.id),
+    });
+
+    if (currentUser && currentUser.latitude && currentUser.longitude) {
+        return {
+            latitude: parseFloat(currentUser.latitude),
+            longitude: parseFloat(currentUser.longitude),
+            image: currentUser.image,
+            name: currentUser.name
+        };
+    }
+    return null;
+}
