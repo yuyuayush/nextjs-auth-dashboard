@@ -11,6 +11,8 @@ export const user = pgTable("user", {
     .$defaultFn(() => false)
     .notNull(),
   image: text("image"),
+  latitude: text("latitude"), // Storing as text for simplicity, or real/double precision
+  longitude: text("longitude"),
   createdAt: timestamp("created_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),

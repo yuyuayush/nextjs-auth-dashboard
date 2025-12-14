@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import UserButton from "@/components/layout/UserButton";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
+import { useSession, authClient } from "@/lib/auth-client";
 
 interface NavbarProps {
     session: any;
@@ -33,6 +33,9 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
                         <>
                             <Link href="/chat">
                                 <Button variant="ghost">Chat</Button>
+                            </Link>
+                            <Link href="/map">
+                                <Button variant="ghost">Map</Button>
                             </Link>
                             <Link href="/dashboard">
                                 <Button variant="ghost">Dashboard</Button>
@@ -69,9 +72,23 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
                             <Link href="/chat" onClick={() => setIsOpen(false)}>
                                 <Button variant="ghost" className="w-full justify-start">Chat</Button>
                             </Link>
+                            <Link href="/map" onClick={() => setIsOpen(false)}>
+                                <Button variant="ghost" className="w-full justify-start">Map</Button>
+                            </Link>
                             <Link href="/dashboard" onClick={() => setIsOpen(false)}>
                                 <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
                             </Link>
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={async () => {
+                                    await authClient.signOut();
+                                    setIsOpen(false);
+                                    window.location.href = "/";
+                                }}
+                            >
+                                Log Out
+                            </Button>
                         </>
                     ) : (
                         <>
