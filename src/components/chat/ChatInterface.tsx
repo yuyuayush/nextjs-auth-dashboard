@@ -30,12 +30,13 @@ export default function ChatInterface({
     const requests = initialUsers.filter(u => u.friendStatus === 'pending_received');
     const selectedFriend = friends.find(f => f.id === selectedFriendId) || null;
 
+
     return (
         <div className="flex h-full bg-white md:bg-transparent overflow-hidden">
-            {/* Sidebar - Hidden on mobile if friend selected */}
+            {/* Sidebar - Shows on mobile ONLY if no friend selected. Always shows on Desktop. */}
             <div className={cn(
-                "w-full md:w-80 bg-gray-50 border-r flex flex-col absolute z-10 md:relative h-full transition-transform duration-300 md:translate-x-0",
-                selectedFriendId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+                "flex-col h-full bg-gray-50 border-r md:flex md:w-80 transition-all",
+                selectedFriendId ? "hidden md:flex" : "flex w-full"
             )}>
                 <div className="p-4 border-b bg-white flex justify-between items-center h-16 shrink-0 z-20">
                     <h2 className="font-bold text-xl text-slate-800 tracking-tight">Messages</h2>
@@ -143,10 +144,10 @@ export default function ChatInterface({
                 </div>
             </div>
 
-            {/* Main Area - Full width on mobile when open */}
+            {/* Main Chat Area - Shows on mobile ONLY if friend selected. Always shows on Desktop. */}
             <div className={cn(
-                "flex-1 flex flex-col bg-white absolute inset-0 md:relative md:inset-auto z-20 md:z-auto transition-transform duration-300 md:transform-none",
-                selectedFriendId ? "translate-x-0" : "translate-x-full md:translate-x-0"
+                "flex-col flex-1 bg-white relative inset-0 md:relative md:inset-auto md:flex",
+                selectedFriendId ? "flex w-full" : "hidden md:flex"
             )}>
                 <ChatWindow
                     selectedUser={selectedFriend}

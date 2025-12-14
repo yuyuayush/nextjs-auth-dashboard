@@ -77,11 +77,12 @@ export default function ChatWindow({
                 },
             });
 
-            // Critical: Caller must join the call to wait for the other person
-            await call.join();
+            console.log("Stream: Created call:", callId);
+            toast.success("Opening call in new tab...");
 
-            console.log("Stream: Started call with members:", [currentUserId, selectedUser.id]);
-            toast.success("Calling...");
+            // Open the dedicated call page in a new tab
+            window.open(`/call/${callId}`, '_blank');
+
         } catch (error: any) {
             console.error("Call failed:", error);
             const errorMessage = error.message || "Unknown error";
@@ -274,24 +275,24 @@ export default function ChatWindow({
                         Active now
                     </p>
                 </div>
-                <div className="flex gap-0.5 md:gap-1 ml-auto shrink-0">
+                <div className="flex gap-2 ml-auto shrink-0 items-center">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleStartCall('default')}
-                        className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all w-8 h-8 md:w-10 md:h-10"
+                        className="text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-all w-9 h-9 md:w-10 md:h-10 shadow-sm"
                         title="Video Call"
                     >
-                        <VideoIcon className="w-4 h-4 md:w-5 md:h-5" />
+                        <VideoIcon className="w-5 h-5" />
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleStartCall('default')}
-                        className="text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-all w-8 h-8 md:w-10 md:h-10"
+                        className="text-green-600 bg-green-50 hover:bg-green-100 rounded-full transition-all w-9 h-9 md:w-10 md:h-10 shadow-sm"
                         title="Audio Call"
                     >
-                        <Phone className="w-4 h-4 md:w-5 md:h-5" />
+                        <Phone className="w-5 h-5" />
                     </Button>
                 </div>
             </div>
@@ -348,10 +349,12 @@ export default function ChatWindow({
                                         <p className="text-[15px] leading-relaxed break-words">{m.content}</p>
                                     )}
 
-                                    <div className={cn(
-                                        "text-[10px] mt-1 flex gap-1 items-center justify-end opacity-0 group-hover:opacity-70 transition-opacity absolute -bottom-5 right-0 min-w-max",
-                                        isMe ? "text-slate-400" : "text-slate-400"
-                                    )}>
+                                    <div
+                                        suppressHydrationWarning
+                                        className={cn(
+                                            "text-[10px] mt-1 flex gap-1 items-center justify-end opacity-0 group-hover:opacity-70 transition-opacity absolute -bottom-5 right-0 min-w-max",
+                                            isMe ? "text-slate-400" : "text-slate-400"
+                                        )}>
                                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                 </div>

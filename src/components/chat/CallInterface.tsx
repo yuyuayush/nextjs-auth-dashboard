@@ -29,7 +29,7 @@ export default function CallInterface() {
     // Incoming Call State (Ring) - Only if we are NOT the creator
     if (callingState === 'ringing' && !isCreator) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-md">
                 <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-300">
 
                     <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl">
@@ -63,7 +63,12 @@ export default function CallInterface() {
 
                         <div className="flex flex-col items-center gap-2">
                             <button
-                                onClick={() => call.join()}
+                                onClick={() => {
+                                    // Open call in new tab
+                                    window.open(`/call/${call.id}`, '_blank');
+                                    // We don't join here, the new tab will join.
+                                    // Eventually the 'ringing' state will stop as the call becomes active elsewhere.
+                                }}
                                 className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all hover:scale-110 shadow-lg shadow-green-500/20 animate-bounce"
                             >
                                 <Phone className="w-8 h-8 text-white" />
@@ -76,59 +81,7 @@ export default function CallInterface() {
         );
     }
 
-    // Outgoing Call State (Calling...) - When we are joined but alone
-    // or explicit 'ringing' if we are the creator
-    if ((callingState === 'ringing' && isCreator) || (callingState === 'joined' && participantCount <= 1)) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md">
-                <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-300">
-                    <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl">
-                        {targetUser?.image ? (
-                            <Image src={targetUser.image} alt={targetUser.name || 'User'} fill className="object-cover" />
-                        ) : (
-                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-                                <UserIcon className="w-16 h-16 text-zinc-500" />
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="text-center space-y-2">
-                        <h2 className="text-3xl font-bold text-white tracking-tight">{targetUser?.name || 'User'}</h2>
-                        <p className="text-zinc-400 text-lg font-medium flex items-center justify-center gap-2">
-                            Calling...
-                        </p>
-                    </div>
-
-                    <div className="mt-8">
-                        <button
-                            onClick={() => call.leave()}
-                            className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all hover:scale-110 shadow-lg shadow-red-500/20"
-                        >
-                            <Phone className="w-8 h-8 text-white rotate-[135deg]" />
-                        </button>
-                        <p className="text-center text-xs text-white/50 mt-2 font-medium">End</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Active Call State
-    if (callingState === 'joining' || callingState === 'joined') {
-        return (
-            <div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col animate-in slide-in-from-bottom duration-300">
-                <StreamTheme>
-                    <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4">
-                        <SpeakerLayout participantsBarPosition="bottom" />
-                    </div>
-
-                    <div className="bg-zinc-900 border-t border-zinc-800 p-6 flex items-center justify-center shadow-2xl">
-                        <CallControls onLeave={() => call.leave()} />
-                    </div>
-                </StreamTheme>
-            </div>
-        );
-    }
-
+    // New Tab Logic: We DO NOT render outgoing or active calls in the main app anymore.
+    // They are handled in the popup window.
     return null;
 }
