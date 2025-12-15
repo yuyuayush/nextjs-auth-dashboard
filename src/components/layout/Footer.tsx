@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { Facebook, Twitter, Instagram, Github } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+    const pathname = usePathname();
+    if (pathname.startsWith('/call/')) return null;
+
     return (
         <footer className="relative bg-slate-950 text-slate-200 overflow-hidden mt-10">
             {/* Background Gradients */}

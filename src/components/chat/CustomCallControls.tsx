@@ -49,7 +49,7 @@ export default function CustomCallControls() {
     };
 
     return (
-        <div className="flex items-center justify-center gap-2 md:gap-4 pb-0 md:pb-0">
+        <div className="flex items-center justify-center gap-3 md:gap-4 p-1 md:p-0">
             {/* Microphone */}
             <button
                 onClick={() => microphone.toggle()}

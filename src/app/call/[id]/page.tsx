@@ -76,9 +76,12 @@ function ActiveCallContent() {
     // Derived state for layout
     const isOneOnOne = participantCount <= 2;
 
-    // Find screen share participant
-    // @ts-ignore
-    const screenShareParticipant = participants.find(p => p.publishedTracks.includes('screenShare'));
+    // Find screen share participant - Check multiple potential properties for robustness
+    const screenShareParticipant = participants.find(p =>
+        (p as any).isScreenSharing ||
+        p.publishedTracks.includes('screenShare') ||
+        p.publishedTracks.includes('screenShareTrack')
+    );
 
     // For 1:1, get the "other" person
     const remoteParticipant = participants.find(p => p.userId !== localParticipant?.userId);
@@ -117,8 +120,8 @@ function ActiveCallContent() {
                                     </div>
                                 )}
 
-                                {/* Draggable/Floating Local Participant (PiP) */}
-                                <div className="absolute top-4 right-4 w-32 h-48 md:w-48 md:h-64 bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 z-10 transition-all hover:scale-105">
+                                {/* Draggable/Floating Local Participant (PiP) - Responsive Size */}
+                                <div className="absolute top-4 right-4 w-24 h-36 md:w-48 md:h-64 bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 z-10 transition-all hover:scale-105">
                                     {localParticipant && (
                                         <ParticipantView
                                             participant={localParticipant}
@@ -135,8 +138,8 @@ function ActiveCallContent() {
                     </div>
                 </div>
 
-                {/* Controls Bar */}
-                <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center z-20 pointer-events-none">
+                {/* Controls Bar - Improved Mobile Spacing */}
+                <div className="absolute bottom-6 md:bottom-10 left-0 right-0 flex items-center justify-center z-20 pointer-events-none">
                     <div className="bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-2xl md:rounded-full px-4 py-3 md:px-8 md:py-2 shadow-xl pointer-events-auto mx-4 max-w-full overflow-x-auto no-scrollbar">
                         <CustomCallControls />
                     </div>
