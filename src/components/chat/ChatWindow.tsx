@@ -316,47 +316,53 @@ export default function ChatWindow({
                     const isSequence = index > 0 && messages[index - 1].senderId === m.senderId;
 
                     return (
-                        <div key={m.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
-                            <div className={cn("flex max-w-[85%] md:max-w-[70%] gap-2", isMe ? "flex-row-reverse" : "flex-row")}>
+                        <div key={m.id} className={cn("flex w-full mb-6", isMe ? "justify-end" : "justify-start")}>
+                            <div className={cn("flex max-w-[85%] md:max-w-[70%] gap-3", isMe ? "flex-row-reverse" : "flex-row")}>
                                 {/* Avatar for 'Them' */}
-                                {!isMe && !isSequence && (
-                                    <div className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden flex-shrink-0 mt-auto">
-                                        {selectedUser.image ? (
-                                            <Image src={selectedUser.image} alt={selectedUser.name} fill className="object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center font-bold text-gray-500 text-xs">
-                                                {selectedUser.name.charAt(0).toUpperCase()}
+                                {!isMe && (
+                                    <div className="flex flex-col justify-end">
+                                        {!isSequence ? (
+                                            <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm relative ring-2 ring-white">
+                                                {selectedUser.image ? (
+                                                    <Image src={selectedUser.image} alt={selectedUser.name} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-500 bg-gray-100 text-[10px]">
+                                                        {selectedUser.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
                                             </div>
+                                        ) : (
+                                            <div className="w-8" />
                                         )}
                                     </div>
                                 )}
-                                {!isMe && isSequence && <div className="w-8 flex-shrink-0" />}
 
-                                <div className={cn(
-                                    "p-3.5 px-5 shadow-sm relative group transition-all duration-200",
-                                    isMe
-                                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-sm"
-                                        : "bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-tl-sm",
-                                    isSequence && isMe && "rounded-tr-2xl mt-0.5",
-                                    isSequence && !isMe && "rounded-tl-2xl mt-0.5"
-                                )}>
-                                    {m.attachmentUrl ? (
-                                        <>
-                                            {renderAttachment(m.attachmentUrl, m.attachmentType)}
-                                            {m.content && m.content !== 'Shared a file' && m.content !== 'Shared an image' && m.content !== 'Shared a video' && (
-                                                <p className="mt-2 text-sm opacity-90">{m.content}</p>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <p className="text-[15px] leading-relaxed break-words">{m.content}</p>
-                                    )}
+                                <div className="flex flex-col gap-1 min-w-0">
+                                    <div className={cn(
+                                        "p-4 shadow-sm relative group transition-all duration-200",
+                                        isMe
+                                            ? "bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-2xl rounded-tr-sm"
+                                            : "bg-white text-slate-800 border-2 border-slate-100 rounded-2xl rounded-tl-sm",
+                                        isSequence && isMe && "rounded-tr-2xl mt-0.5",
+                                        isSequence && !isMe && "rounded-tl-2xl mt-0.5"
+                                    )}>
+                                        {m.attachmentUrl ? (
+                                            <>
+                                                {renderAttachment(m.attachmentUrl, m.attachmentType)}
+                                                {m.content && m.content.startsWith('Shared a') ? null : (
+                                                    <p className="mt-2 text-sm opacity-90">{m.content}</p>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <p className="text-[15px] leading-relaxed break-words">{m.content}</p>
+                                        )}
+                                    </div>
 
-                                    <div
-                                        suppressHydrationWarning
-                                        className={cn(
-                                            "text-[10px] mt-1 flex gap-1 items-center justify-end opacity-0 group-hover:opacity-70 transition-opacity absolute -bottom-5 right-0 min-w-max",
-                                            isMe ? "text-slate-400" : "text-slate-400"
-                                        )}>
+                                    {/* Timestamp below bubble */}
+                                    <div className={cn(
+                                        "text-[10px] font-medium opacity-60 px-1",
+                                        isMe ? "text-right" : "text-left"
+                                    )}>
                                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                 </div>
@@ -374,45 +380,42 @@ export default function ChatWindow({
                     </div>
                 )}
 
-                <form onSubmit={handleSend} className="flex gap-3 items-end max-w-4xl mx-auto">
+                <form onSubmit={handleSend} className="flex gap-3 items-end max-w-4xl mx-auto bg-slate-100 p-2 rounded-3xl border border-transparent focus-within:border-blue-200 focus-within:bg-white focus-within:shadow-lg transition-all duration-300">
                     <input
                         type="file"
                         ref={fileInputRef}
                         className="hidden"
                         onChange={handleFileUpload}
-                    // accept="image/*" // Remove accept to allow all files
                     />
 
-                    <div className="flex gap-2 pb-2">
-                        <div className="flex bg-slate-50 rounded-full p-1 border border-slate-100">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full w-9 h-9 transition-colors"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={isUploading}
-                            >
-                                {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="text-slate-400 hover:text-yellow-500 hover:bg-yellow-50 rounded-full w-9 h-9 transition-colors"
-                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            >
-                                <Smile className="w-5 h-5" />
-                            </Button>
-                        </div>
+                    <div className="flex gap-1 items-center pl-1">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-full w-9 h-9 transition-colors"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                        >
+                            {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-slate-500 hover:text-yellow-500 hover:bg-yellow-50/50 rounded-full w-9 h-9 transition-colors"
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        >
+                            <Smile className="w-5 h-5" />
+                        </Button>
                     </div>
 
-                    <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-200 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-50 transition-all flex items-center px-4 py-2">
+                    <div className="flex-1 py-1">
                         <Input
                             value={newMessage}
                             onChange={e => setNewMessage(e.target.value)}
-                            placeholder="Type a message..."
-                            className="border-0 bg-transparent flex-1 focus-visible:ring-0 px-0 h-auto py-1 text-slate-700 placeholder:text-slate-400"
+                            placeholder="Type your message..."
+                            className="border-0 bg-transparent flex-1 focus-visible:ring-0 px-2 h-auto py-1.5 text-slate-700 placeholder:text-slate-400 font-medium"
                         />
                     </div>
 
@@ -420,12 +423,14 @@ export default function ChatWindow({
                         type="submit"
                         size="icon"
                         className={cn(
-                            "mb-1 h-11 w-11 rounded-full shadow-md transition-all duration-200",
-                            !newMessage.trim() && !isUploading ? "bg-slate-200 text-slate-400 hover:bg-slate-200 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:scale-105 active:scale-95"
+                            "h-10 w-10 rounded-full shadow-sm transition-all duration-300 mb-0.5 mr-0.5",
+                            !newMessage.trim() && !isUploading
+                                ? "bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200"
+                                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-md hover:scale-105 active:scale-95"
                         )}
                         disabled={!newMessage.trim() && !isUploading}
                     >
-                        <Send className="w-5 h-5 ml-0.5" />
+                        <Send className="w-4 h-4 ml-0.5 text-white" />
                     </Button>
                 </form>
             </div>

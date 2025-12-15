@@ -145,11 +145,8 @@ export default function SignIn() {
                     onRequest: (ctx) => {
                       setLoading(true);
                     },
-                    onResponse: (ctx) => {
+                    onResponse: () => {
                       setLoading(false);
-                      if (ctx.error) {
-                        toast.error(ctx.error.message);
-                      }
                     },
                     onError: (ctx) => {
                       toast.error(ctx.error.message);
@@ -182,11 +179,8 @@ export default function SignIn() {
                     onRequest: (ctx) => {
                       setLoading(true);
                     },
-                    onResponse: (ctx) => {
+                    onResponse: () => {
                       setLoading(false);
-                      if (ctx.error) {
-                        toast.error(ctx.error.message);
-                      }
                     },
                     onError: (ctx) => {
                       toast.error(ctx.error.message);
