@@ -148,7 +148,7 @@ export async function getRoute(startLat: number, startLng: number, endLat: numbe
     try {
         // Using OSRM Public API (Free)
         // options: steps=true (directions), overview=full (geometry)
-        const url = `http://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true`;
+        const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true`;
         const res = await fetch(url);
         const data = await res.json();
 

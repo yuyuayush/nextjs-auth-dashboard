@@ -13,14 +13,12 @@ import { searchPlaces, getRecommendations, getPlaceName } from "@/app/actions/to
 import { createMapSession, joinSession, approveParticipant, updateLocation, getRoute, getMapSession } from "@/app/actions/map";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-// Leaflet Icon Fix
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
+// Leaflet Icon Fix - moved to component to avoid SSR issues
+const iconConfig = {
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+};
 
 interface Place {
     id: string;
@@ -89,8 +87,13 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
     const [routeMetrics, setRouteMetrics] = useState<{ duration: number, distance: number } | null>(null);
     const [routeSteps, setRouteSteps] = useState<any[]>([]);
 
-    // Initial Load from LocalStorage
+    // Initial Load from LocalStorage and Leaflet Fix
     useEffect(() => {
+        // Fix Leaflet icons
+        // @ts-ignore
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions(iconConfig);
+
         const savedPlan = localStorage.getItem("tour_plan");
         if (savedPlan) {
             try {

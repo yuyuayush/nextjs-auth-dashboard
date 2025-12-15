@@ -9,11 +9,13 @@ import { toast } from 'sonner';
 import { Loader2, Upload, Images, Globe, Lock } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import imageCompression from 'browser-image-compression';
+import { useRouter } from 'next/navigation';
 
 export default function CreatePost() {
     const [loading, setLoading] = useState(false);
     const [fileCount, setFileCount] = useState(0);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const router = useRouter();
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) { // Changed to FormEvent handler
         e.preventDefault(); // Prevent default since we handle it manually
@@ -57,6 +59,7 @@ export default function CreatePost() {
                 form.reset();
                 setFileCount(0);
                 setPreviewUrl(null);
+                router.push("/dashboard");
             } else {
                 toast.error(res.error || 'Failed to create post');
             }

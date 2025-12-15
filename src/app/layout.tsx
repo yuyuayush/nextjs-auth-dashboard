@@ -9,6 +9,7 @@ import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 import VideoCallProvider from "@/components/chat/VideoCallProvider";
 import "@stream-io/video-react-sdk/dist/css/styles.css";
+import Footer from "@/components/layout/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default async function RootLayout({
           <main>
             {children}
           </main>
+          <Footer />
         </VideoCallProvider>
         <Toaster />
       </body>

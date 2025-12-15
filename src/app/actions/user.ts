@@ -80,3 +80,34 @@ export async function getUser() {
 
     return userData;
 }
+
+import { utapi } from "@/lib/uploadthing";
+
+export async function uploadAvatar(formData: FormData) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
+    const file = formData.get("file") as File;
+    if (!file) {
+        return { success: false, error: "No file provided" };
+    }
+
+    try {
+        const response = await utapi.uploadFiles(file);
+
+        if (response.error) {
+            return { success: false, error: response.error.message };
+        }
+
+        return { success: true, url: response.data.url };
+
+    } catch (error) {
+        console.error("Upload error:", error);
+        return { success: false, error: "Upload failed" };
+    }
+}

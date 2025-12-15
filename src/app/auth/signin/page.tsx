@@ -11,6 +11,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -101,10 +102,15 @@ export default function SignIn() {
                   onResponse: (ctx) => {
                     console.log(ctx.response);
                     if (ctx.response.ok) {
+                      toast.success("Signed in successfully");
                       router.push('/dashboard');
                     }
                     setLoading(false);
                   },
+                  onError: (ctx) => {
+                    toast.error(ctx.error.message);
+                    setLoading(false);
+                  }
                 },
               );
             }}
@@ -141,7 +147,13 @@ export default function SignIn() {
                     },
                     onResponse: (ctx) => {
                       setLoading(false);
+                      if (ctx.error) {
+                        toast.error(ctx.error.message);
+                      }
                     },
+                    onError: (ctx) => {
+                      toast.error(ctx.error.message);
+                    }
                   },
                 );
               }}
@@ -172,7 +184,13 @@ export default function SignIn() {
                     },
                     onResponse: (ctx) => {
                       setLoading(false);
+                      if (ctx.error) {
+                        toast.error(ctx.error.message);
+                      }
                     },
+                    onError: (ctx) => {
+                      toast.error(ctx.error.message);
+                    }
                   },
                 );
               }}

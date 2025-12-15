@@ -70,93 +70,154 @@ export default function ProfilePage() {
         }
     };
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setAvatarLoading(true);
+        try {
+            // Dynamic import to avoid server-side issues if any, though utapi is usually safe
+            const { utapi } = await import("@/lib/uploadthing");
+            // Actually 'utapi' is server-side usually, we need a client upload mechanism.
+            // Since we don't have a direct client upload component handy in 'lib', let's use a server action or the same pattern as CreatePost but simpler.
+            // Wait, CreatePost used `utapi` but it was imported from `@/lib/uploadthing` which MIGHT be server-only.
+            // Let's check `createPost` action again. It uses `utapi.uploadFiles`. That is SERVER side.
+            // We need to send the file to a server action.
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            // We need a server action for this. Let's create a quick inline one or import it?
+            // Better: Create a new action `uploadProfileImage` in `user.ts` or similar? 
+            // Or reuse `updateUserAvatar`? No, that takes a URL.
+            // Let's assume we can add a server action for this in the next step or if we have one.
+            // For now, let's use a custom server action we'll create right after this: `uploadAvatarFile`.
+
+            const { uploadAvatar } = await import("@/app/actions/user");
+            const res = await uploadAvatar(formData);
+
+            if (res.success && res.url) {
+                await handleUpdateAvatar(res.url); // This assumes handleUpdateAvatar just saves the URL, which is redundant if uploadAvatar does it, but safer.
+            } else {
+                toast.error("Failed to upload image");
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Upload failed");
+            setAvatarLoading(false);
+        }
+    };
+
     if (!session) {
-        return <div className="flex justify-center p-8">Loading...</div>;
+        return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-8">Profile Settings</h1>
-
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
-                <div className="max-w-md space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" value={session.user.email} disabled className="bg-gray-100" />
-                        <p className="text-xs text-gray-500">Email cannot be changed</p>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Display Name</Label>
-                        <Input
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Enter your name"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="birthday">Birthday</Label>
-                        <Input
-                            id="birthday"
-                            type="date"
-                            value={birthday ? new Date(birthday).toISOString().split('T')[0] : ''}
-                            onChange={(e) => setBirthday(e.target.value ? new Date(e.target.value) : undefined)}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="address">Address</Label>
-                        <Input
-                            id="address"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            placeholder="Enter your address"
-                        />
-                    </div>
-
-                    <Button onClick={handleUpdateProfile} disabled={loading}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Changes
-                    </Button>
-                </div>
+        <div className="max-w-5xl mx-auto p-6 md:p-10 space-y-8">
+            {/* Header / Banner */}
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 h-48 md:h-64 shadow-2xl flex items-center justify-center">
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
+                <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight z-10 drop-shadow-md">
+                    {session.user.name}&apos;s Profile
+                </h1>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Avatar</h2>
-                <div className="mb-6">
-                    <p className="text-sm text-gray-600 mb-2">Current Avatar</p>
-                    <div className="flex items-center gap-4">
-                        {session.user.image ? (
-                            <img src={session.user.image} alt="Current" className="w-20 h-20 rounded-full object-cover border-2 border-gray-200" />
-                        ) : (
-                            <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
-                                {session.user.name?.charAt(0)}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 -mt-20 relative z-20 px-4 md:px-0">
+
+                {/* Avatar Section */}
+                <div className="lg:col-span-1">
+                    <div className="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center text-center h-full border border-gray-100">
+                        <div className="relative mb-4 group">
+                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-white shadow-lg overflow-hidden">
+                                {session.user.image ? (
+                                    <img src={session.user.image} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                                ) : (
+                                    <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-4xl font-bold">
+                                        {session.user.name?.charAt(0)}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                            <label htmlFor="avatar-upload" className="absolute bottom-2 right-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full cursor-pointer shadow-lg transition-transform hover:scale-110">
+                                {avatarLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                                )}
+                                <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={avatarLoading} />
+                            </label>
+                        </div>
+
+                        <h2 className="text-xl font-bold text-gray-800">{session.user.name}</h2>
+                        <p className="text-gray-500 text-sm mb-6">{session.user.email}</p>
+
+                        <div className="w-full border-t pt-4">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Choose Avatar Preset</p>
+                            <div className="grid grid-cols-4 gap-2">
+                                {AVAILABLE_AVATARS.map((avatar, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleUpdateAvatar(avatar)}
+                                        disabled={avatarLoading}
+                                        className={`rounded-full overflow-hidden border-2 transition-all hover:scale-110 ${session.user.image === avatar ? 'border-blue-600 ring-2 ring-blue-100' : 'border-transparent hover:border-blue-300'}`}
+                                    >
+                                        <img src={avatar} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {AVAILABLE_AVATARS.map((avatar, index) => (
-                        <button
-                            key={index}
-                            onClick={() => handleUpdateAvatar(avatar)}
-                            disabled={avatarLoading}
-                            className={`relative rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${session.user.image === avatar ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-300'}`}
-                        >
-                            <img src={avatar} alt={`Avatar option ${index + 1}`} className="w-full aspect-square object-cover" />
-                            {session.user.image === avatar && (
-                                <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                                    <div className="bg-white rounded-full p-1 text-blue-500">
-                                        ✓
-                                    </div>
-                                </div>
-                            )}
-                        </button>
-                    ))}
+                {/* Details Section */}
+                <div className="lg:col-span-2">
+                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 h-full">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-slate-800">Personal Details</h2>
+                            <Button onClick={handleUpdateProfile} disabled={loading} className="bg-slate-900 hover:bg-slate-800 rounded-xl">
+                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Changes
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email Address</Label>
+                                <Input id="email" value={session.user.email} disabled className="bg-gray-50 border-gray-200 text-gray-500" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Full Name</Label>
+                                <Input
+                                    id="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="e.g. John Doe"
+                                    className="border-gray-200 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="birthday">Birthday</Label>
+                                <Input
+                                    id="birthday"
+                                    type="date"
+                                    value={birthday ? new Date(birthday).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => setBirthday(e.target.value ? new Date(e.target.value) : undefined)}
+                                    className="border-gray-200 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="address">Address</Label>
+                                <Input
+                                    id="address"
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    placeholder="e.g. 123 Main St, New York"
+                                    className="border-gray-200 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

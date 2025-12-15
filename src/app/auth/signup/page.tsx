@@ -116,6 +116,7 @@ export default function SignUp() {
 										toast.error(ctx.error.message);
 									},
 									onSuccess: async () => {
+										toast.success("Account created! Please verify your email.");
 										router.push("/verify-email");
 									},
 								},
