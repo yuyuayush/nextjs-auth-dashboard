@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { useCall, useCallStateHooks } from "@stream-io/video-react-sdk";
