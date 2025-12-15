@@ -53,7 +53,7 @@ function MapEvents({ onMapClick }: { onMapClick: (lat: number, lng: number) => v
 function MapController({ center, zoom }: { center: [number, number] | null, zoom: number }) {
     const map = useMapEvents({});
     useEffect(() => {
-        if (center) {
+        if (center && !isNaN(center[0]) && !isNaN(center[1])) {
             map.flyTo(center, zoom, { duration: 1.5 });
         }
     }, [center, zoom, map]);
@@ -87,6 +87,15 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
     const [routeMetrics, setRouteMetrics] = useState<{ duration: number, distance: number } | null>(null);
     const [routeSteps, setRouteSteps] = useState<any[]>([]);
 
+    // Map Invalidator for Mobile Tabs
+    function MapInvalidator() {
+        const map = useMapEvents({});
+        useEffect(() => {
+            map.invalidateSize();
+        }, [map, mobileView]); // Re-run when view changes
+        return null;
+    }
+
     // Initial Load from LocalStorage and Leaflet Fix
     useEffect(() => {
         // Fix Leaflet icons
@@ -98,10 +107,26 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
         if (savedPlan) {
             try {
                 const parsed = JSON.parse(savedPlan);
-                setPlanName(parsed.name);
-                setMarkers(parsed.markers);
+                if (parsed.name) setPlanName(parsed.name);
+
+                // Sanitize markers to ensure valid lat/lng
+                if (Array.isArray(parsed.markers)) {
+                    const validMarkers = parsed.markers.filter((m: any) =>
+                        m &&
+                        typeof m.lat === 'number' && !isNaN(m.lat) &&
+                        typeof m.lng === 'number' && !isNaN(m.lng)
+                    );
+                    setMarkers(validMarkers);
+
+                    // If we have valid markers, center on the first one
+                    if (validMarkers.length > 0) {
+                        setViewCenter([validMarkers[0].lat, validMarkers[0].lng]);
+                    }
+                }
             } catch (e) {
                 console.error("Failed to load plan", e);
+                // If corrupted, clear it to prevent persistent crash
+                localStorage.removeItem("tour_plan");
             }
         }
 
@@ -160,9 +185,21 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
         if (!startLocationQuery) return;
         setIsSearching(true);
         try {
-            const results = await searchPlaces(startLocationQuery);
+            const result = await searchPlaces(startLocationQuery);
+
+            if (!result.success) {
+                toast.error(result.error);
+                return;
+            }
+
+            const results = result.data;
+
             if (results && results.length > 0) {
                 const place = results[0];
+                if (isNaN(place.lat) || isNaN(place.lng)) {
+                    toast.error("Invalid start location data");
+                    return;
+                }
                 setMyLocation([place.lat, place.lng]);
                 toast.success(`Start set to: ${place.name}`);
                 setViewCenter([place.lat, place.lng]);
@@ -270,16 +307,38 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
         e.preventDefault();
         setIsSearching(true);
         try {
-            const results = await searchPlaces(searchQuery);
-            if (results && results.length > 0) {
+            const result = await searchPlaces(searchQuery);
+
+            if (!result.success) {
+                toast.error(result.error);
+                return;
+            }
+
+            const results = result.data;
+
+            if (Array.isArray(results) && results.length > 0) {
                 const place = results[0];
-                setMarkers([...markers, { ...place, id: crypto.randomUUID() }]);
+
+                if (isNaN(place.lat) || isNaN(place.lng)) {
+                    toast.error("Invalid location data received");
+                    return;
+                }
+
+                setMarkers([...markers, {
+                    ...place,
+                    id: crypto.randomUUID(),
+                    rating: place.rating ? parseFloat(place.rating) : 4.5
+                }]);
                 toast.success(`Found: ${place.name}`);
                 setViewCenter([place.lat, place.lng]);
                 setViewZoom(13);
-                const recs = await getRecommendations(place.lat, place.lng);
-                setRecommendations(recs);
-                setMobileView('map'); // Switch to map to see result
+
+                // Wrap in try-catch to prevent secondary failure
+                try {
+                    const recs = await getRecommendations(place.lat, place.lng);
+                    setRecommendations(recs);
+                } catch (e) { console.warn("Recs failed", e); }
+                setMobileView('map');
             } else {
                 toast.error("No places found");
             }
@@ -313,7 +372,7 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
     };
 
     return (
-        <div className="flex flex-col lg:flex-row h-[85vh] gap-6 relative">
+        <div className="flex flex-col lg:flex-row h-[85dvh] gap-6 relative">
 
             {/* Mobile Toggle Tabs */}
             <div className="lg:hidden flex mb-2 bg-white rounded-xl p-1 shadow-sm border border-slate-200">
@@ -624,6 +683,7 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
                         }
                     />
                     <MapEvents onMapClick={handleMapClick} />
+                    <MapInvalidator />
                     <MapController center={viewCenter} zoom={viewZoom} />
 
                     {/* Route Line */}

@@ -1,34 +1,44 @@
 "use server";
 
 export async function searchPlaces(query: string) {
-    if (!query) return [];
+    if (!query) return { success: false, error: "Empty query" };
 
     try {
         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=10&addressdetails=1`, {
             headers: {
-                'User-Agent': 'FriendHub-TourPlan/1.0',
+                'User-Agent': 'FriendHub-TourPlan/1.0 (contact@friendhub.com)', // Added contact info as per policy
                 'Accept-Language': 'en-US,en;q=0.9'
             }
         });
 
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            if (response.status === 403 || response.status === 429) {
+                return { success: false, error: "Search limit reached. Please try again later." };
+            }
+            throw new Error(`Search failed: ${response.statusText}`);
         }
 
         const data = await response.json();
 
-        return data.map((item: any) => ({
+        if (!Array.isArray(data)) {
+            return { success: false, error: "Invalid response from map provider" };
+        }
+
+        const places = data.map((item: any) => ({
             id: item.place_id.toString(),
             name: item.display_name.split(',')[0],
             fullName: item.display_name,
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lon),
+            lat: isNaN(parseFloat(item.lat)) ? 0 : parseFloat(item.lat),
+            lng: isNaN(parseFloat(item.lon)) ? 0 : parseFloat(item.lon),
             type: item.type || 'place',
             rating: (4 + Math.random()).toFixed(1)
         }));
-    } catch (error) {
+
+        return { success: true, data: places };
+
+    } catch (error: any) {
         console.error("Search failed:", error);
-        return [];
+        return { success: false, error: error.message || "Search failed" };
     }
 }
 

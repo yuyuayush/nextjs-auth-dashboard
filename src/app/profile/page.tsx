@@ -76,35 +76,22 @@ export default function ProfilePage() {
 
         setAvatarLoading(true);
         try {
-            // Dynamic import to avoid server-side issues if any, though utapi is usually safe
-            const { utapi } = await import("@/lib/uploadthing");
-            // Actually 'utapi' is server-side usually, we need a client upload mechanism.
-            // Since we don't have a direct client upload component handy in 'lib', let's use a server action or the same pattern as CreatePost but simpler.
-            // Wait, CreatePost used `utapi` but it was imported from `@/lib/uploadthing` which MIGHT be server-only.
-            // Let's check `createPost` action again. It uses `utapi.uploadFiles`. That is SERVER side.
-            // We need to send the file to a server action.
-
             const formData = new FormData();
             formData.append("file", file);
-
-            // We need a server action for this. Let's create a quick inline one or import it?
-            // Better: Create a new action `uploadProfileImage` in `user.ts` or similar? 
-            // Or reuse `updateUserAvatar`? No, that takes a URL.
-            // Let's assume we can add a server action for this in the next step or if we have one.
-            // For now, let's use a custom server action we'll create right after this: `uploadAvatarFile`.
 
             const { uploadAvatar } = await import("@/app/actions/user");
             const res = await uploadAvatar(formData);
 
             if (res.success && res.url) {
-                await handleUpdateAvatar(res.url); // This assumes handleUpdateAvatar just saves the URL, which is redundant if uploadAvatar does it, but safer.
+                await handleUpdateAvatar(res.url); // Use the URL to update the user profile
             } else {
-                toast.error("Failed to upload image");
+                toast.error(res.error || "Failed to upload image");
             }
 
         } catch (error) {
             console.error(error);
             toast.error("Upload failed");
+        } finally {
             setAvatarLoading(false);
         }
     };
