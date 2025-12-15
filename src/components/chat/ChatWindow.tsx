@@ -52,7 +52,7 @@ export default function ChatWindow({
     // Stream Video Hook
     const videoClient = useStreamVideoClient();
 
-    const handleStartCall = async (type: 'default' | 'audio_room' = 'default') => {
+    const handleStartCall = async (video: boolean) => {
         if (!videoClient || !selectedUser) {
             toast.error("Video calling unavailable (Check Keys)");
             return;
@@ -60,7 +60,6 @@ export default function ChatWindow({
 
         try {
             // Ensure the target user exists in Stream backend
-            // This fixes: "The following users ... don't exist"
             await syncUser(
                 selectedUser.id,
                 selectedUser.name,
@@ -68,20 +67,23 @@ export default function ChatWindow({
             );
 
             const callId = crypto.randomUUID();
-            const call = videoClient.call(type, callId);
+            const call = videoClient.call('default', callId);
 
             await call.getOrCreate({
                 ring: true,
                 data: {
                     members: [{ user_id: currentUserId }, { user_id: selectedUser.id }],
+                    custom: {
+                        type: video ? 'video' : 'audio' // Store type in call data too
+                    }
                 },
             });
 
             console.log("Stream: Created call:", callId);
-            toast.success("Opening call in new tab...");
+            toast.success(`Starting ${video ? 'video' : 'audio'} call...`);
 
-            // Open the dedicated call page in a new tab
-            window.open(`/call/${callId}`, '_blank');
+            // Open the dedicated call page in a new tab with video param
+            window.open(`/call/${callId}?video=${video}`, '_blank');
 
         } catch (error: any) {
             console.error("Call failed:", error);
@@ -279,7 +281,7 @@ export default function ChatWindow({
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleStartCall('default')}
+                        onClick={() => handleStartCall(true)}
                         className="text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-all w-9 h-9 md:w-10 md:h-10 shadow-sm"
                         title="Video Call"
                     >
@@ -288,7 +290,7 @@ export default function ChatWindow({
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleStartCall('default')}
+                        onClick={() => handleStartCall(false)}
                         className="text-green-600 bg-green-50 hover:bg-green-100 rounded-full transition-all w-9 h-9 md:w-10 md:h-10 shadow-sm"
                         title="Audio Call"
                     >

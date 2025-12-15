@@ -10,6 +10,7 @@ import {
 } from '@stream-io/video-react-sdk';
 import { X, Phone, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect } from 'react';
 
 export default function CallInterface() {
     const call = useCall();
@@ -25,6 +26,19 @@ export default function CallInterface() {
     // Get other participants for display
     const otherParticipants = call.state.members.filter(m => m.user_id !== call.currentUserId);
     const targetUser = otherParticipants[0]?.user; // For 1:1 calls
+
+    // Incoming Call Ringtone
+    useEffect(() => {
+        if (callingState === 'ringing' && !isCreator) {
+            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3");
+            audio.loop = true;
+            audio.play().catch(e => console.error("Audio play failed", e));
+            return () => {
+                audio.pause();
+                audio.currentTime = 0;
+            };
+        }
+    }, [callingState, isCreator]);
 
     // Incoming Call State (Ring) - Only if we are NOT the creator
     if (callingState === 'ringing' && !isCreator) {

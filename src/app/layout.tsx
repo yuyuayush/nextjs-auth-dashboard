@@ -21,8 +21,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Auth Dashboard",
-  description: "A Next.js app with authentication and dashboard",
+  title: "FriendHub",
+  description: "Connect with friends, chat, and share your world.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default async function RootLayout({

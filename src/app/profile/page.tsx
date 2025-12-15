@@ -29,22 +29,19 @@ export default function ProfilePage() {
     const [avatarLoading, setAvatarLoading] = useState(false);
 
     useEffect(() => {
-        if (session?.user) {
-            setName(session.user.name || "");
-            // Type casting session user extended fields if needed, or fetching fresh data
-            // For now assuming session update will reflect these or we might need a direct fetch 
-            // if session doesn't include them immediately. 
-            // Better-auth session might not have these custom fields by default without config.
-            // But we can try using the 'user' object from session if schema is aligned.
-            // Actually, best to fetch user details on load if session is stale.
-            // For simplicity, let's assume we might need to fetch them or session has them.
-            // Let's rely on useSession for now and see. If fields missing, we might need a specific get.
-
-            // @ts-ignore
-            if (session.user.birthday) setBirthday(new Date(session.user.birthday));
-            // @ts-ignore
-            if (session.user.address) setAddress(session.user.address);
-        }
+        const fetchUserData = async () => {
+            if (session?.user) {
+                setName(session.user.name || "");
+                // Fetch full user details from DB
+                const { getUser } = await import("@/app/actions/user");
+                const user = await getUser();
+                if (user) {
+                    if (user.birthday) setBirthday(new Date(user.birthday));
+                    if (user.address) setAddress(user.address);
+                }
+            }
+        };
+        fetchUserData();
     }, [session]);
 
     const handleUpdateProfile = async () => {

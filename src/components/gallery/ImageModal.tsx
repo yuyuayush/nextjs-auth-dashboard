@@ -250,32 +250,37 @@ export default function ImageModal({ isOpen, onClose, post }: ImageModalProps) {
                                                 variant="ghost"
                                                 onClick={handlePrivacyToggle}
                                                 disabled={isUpdating}
-                                                className="text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-full px-4"
+                                                className={cn(
+                                                    "text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-full px-4",
+                                                    showDeleteConfirm && "hidden md:flex"
+                                                )}
                                             >
                                                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (isPublic ? <Lock className="w-4 h-4 mr-2" /> : <Globe className="w-4 h-4 mr-2" />)}
                                                 {isPublic ? "Make Private" : "Make Public"}
                                             </Button>
 
                                             {showDeleteConfirm ? (
-                                                <div className="flex items-center gap-2 bg-red-50 p-1.5 rounded-full border border-red-100 animate-in slide-in-from-right-2">
-                                                    <span className="text-xs text-red-600 font-medium px-3">Confirm?</span>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setShowDeleteConfirm(false)}
-                                                        className="h-7 w-7 rounded-full p-0 text-red-600 hover:bg-red-100"
-                                                    >
-                                                        <X className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={confirmDelete}
-                                                        disabled={isDeleting}
-                                                        className="h-7 px-3 rounded-full text-xs"
-                                                    >
-                                                        Yes
-                                                    </Button>
+                                                <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-2 bg-red-50 p-1.5 rounded-full border border-red-100 animate-in slide-in-from-right-2">
+                                                    <span className="text-xs text-red-600 font-medium px-3 whitespace-nowrap">Are you sure?</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => setShowDeleteConfirm(false)}
+                                                            className="h-7 w-7 rounded-full p-0 text-red-600 hover:bg-red-100"
+                                                        >
+                                                            <X className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={confirmDelete}
+                                                            disabled={isDeleting}
+                                                            className="h-7 px-3 rounded-full text-xs"
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <Button

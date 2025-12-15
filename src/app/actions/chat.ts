@@ -99,3 +99,40 @@ export async function uploadChatAttachment(formData: FormData) {
 
     return { url: response.data.url, type };
 }
+
+export async function searchUsers(query: string) {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
+    const matchedUsers = await db.query.user.findMany({
+        where: and(
+            ne(user.id, session.user.id),
+            // ILIKE is not directly available in all drizzle drivers via 'ilike', but typically accessible via operators or raw sql.
+            // For simplicity with standard drizzle operators if ilike isn't exported:
+            // Actually, we can use sql template or just standard text search if available.
+            // Let's assume standard 'like' or check if we can import ilike. 
+            // If not, we can use sql`lower(${user.name}) like lower(${'%' + query + '%'})`
+        ),
+        limit: 10
+    });
+
+    // Simple filter since DrizzleORM might need specific operator imports for ILIKE depending on driver
+    // Better to filter in DB but fallback to memory for small prototype if needed.
+    // Let's try fetching all (limited) or just use SQL operator.
+
+    // Re-writing with sql operator for safety:
+    const { ilike } = await import("drizzle-orm");
+    const results = await db.select().from(user).where(
+        and(
+            ne(user.id, session.user.id),
+            ilike(user.name, `%${query}%`)
+        )
+    ).limit(10);
+
+    return results;
+}

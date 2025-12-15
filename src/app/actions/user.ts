@@ -64,3 +64,19 @@ export async function updateUserDetails(data: { name?: string; birthday?: Date; 
 
     return { success: true };
 }
+
+export async function getUser() {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) {
+        return null;
+    }
+
+    const userData = await db.query.user.findFirst({
+        where: eq(user.id, session.user.id),
+    });
+
+    return userData;
+}

@@ -23,8 +23,11 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
     return (
         <header className="p-4 border-b bg-white relative z-50">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
-                <Link href="/">
-                    <h1 className="text-xl font-bold">Auth Dashboard</h1>
+                <Link href="/" className="flex items-center gap-2">
+                    <img src="/logo.png" alt="FriendHub Logo" className="w-12 h-12 object-contain" />
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-teal-400 bg-clip-text text-transparent">
+                        FriendHub
+                    </h1>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -36,6 +39,9 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
                             </Link>
                             <Link href="/map">
                                 <Button variant="ghost">Map</Button>
+                            </Link>
+                            <Link href="/tour-plan">
+                                <Button variant="ghost">Tour Plan</Button>
                             </Link>
                             <Link href="/dashboard">
                                 <Button variant="ghost">Dashboard</Button>
@@ -77,6 +83,9 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
                             </Link>
                             <Link href="/map" onClick={() => setIsOpen(false)}>
                                 <Button variant="ghost" className="w-full justify-start">Map</Button>
+                            </Link>
+                            <Link href="/tour-plan" onClick={() => setIsOpen(false)}>
+                                <Button variant="ghost" className="w-full justify-start">Tour Plan</Button>
                             </Link>
                             <Link href="/dashboard" onClick={() => setIsOpen(false)}>
                                 <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
