@@ -79,8 +79,8 @@ function ActiveCallContent() {
     // Find screen share participant - Check multiple potential properties for robustness
     const screenShareParticipant = participants.find(p =>
         (p as any).isScreenSharing ||
-        p.publishedTracks.includes('screenShare') ||
-        p.publishedTracks.includes('screenShareTrack')
+        (p.publishedTracks as unknown as string[]).includes('screenShare') ||
+        (p.publishedTracks as unknown as string[]).includes('screenShareTrack')
     );
 
     // For 1:1, get the "other" person
