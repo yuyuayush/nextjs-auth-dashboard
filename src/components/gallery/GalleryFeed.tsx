@@ -1,5 +1,7 @@
 'use client';
 
+import MasonryGrid from '@/components/ui/MasonryGrid';
+
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import ImageModal from './ImageModal';
@@ -60,7 +62,16 @@ export default function GalleryFeed({ posts }: { posts: Post[] }) {
 
     return (
         <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <MasonryGrid
+                breakpointCols={{
+                    default: 4,
+                    1100: 3,
+                    700: 2,
+                    500: 1
+                }}
+                className="my-masonry-grid"
+                columnClassName="my-masonry-grid_column"
+            >
                 {posts.map((post, index) => (
                     <motion.div
                         key={post.id}
@@ -68,16 +79,17 @@ export default function GalleryFeed({ posts }: { posts: Post[] }) {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
                         whileHover={{ y: -5 }}
-                        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow group relative"
+                        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow group relative mb-6"
                     >
                         {/* Make the main card click open the modal */}
                         <div onClick={() => setSelectedPost(post)} className="cursor-pointer">
-                            <div className="relative aspect-square overflow-hidden bg-gray-100">
+                            <div className="relative overflow-hidden bg-gray-100">
                                 <Image
                                     src={post.imageUrl}
                                     alt={post.caption || 'Gallery Image'}
-                                    fill
-                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    width={500}
+                                    height={500}
+                                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                                 {session?.user?.id === post.userId && (
                                     <button
@@ -113,7 +125,7 @@ export default function GalleryFeed({ posts }: { posts: Post[] }) {
                         </div>
                     </motion.div>
                 ))}
-            </div>
+            </MasonryGrid>
 
             <ImageModal
                 isOpen={!!selectedPost}

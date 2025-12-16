@@ -24,7 +24,7 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
         <header className="p-4 border-b bg-white relative z-50">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
                 <Link href="/" className="flex items-center gap-2">
-                    <img src="/logo.png" alt="FriendHub Logo" className="w-12 h-12 object-contain" />
+                    <img src="/newlogo.jpg" alt="FriendHub Logo" className="w-12 h-12 object-cover rounded-full" />
                     <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-teal-400 bg-clip-text text-transparent">
                         FriendHub
                     </h1>

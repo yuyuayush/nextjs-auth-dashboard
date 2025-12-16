@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import Masonry from '@/components/ui/MasonryGrid';
 
 interface PostUser {
     name: string;
@@ -130,7 +131,16 @@ export default function UserGallery({ posts }: { posts: Post[] }) {
 
             {/* Grid View */}
             {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <Masonry
+                    breakpointCols={{
+                        default: 4,
+                        1100: 3,
+                        700: 2,
+                        500: 1
+                    }}
+                    className="my-masonry-grid"
+                    columnClassName="my-masonry-grid_column"
+                >
                     {posts.map((post, index) => (
                         <motion.div
                             key={post.id}
@@ -139,7 +149,7 @@ export default function UserGallery({ posts }: { posts: Post[] }) {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             className={cn(
-                                "group relative aspect-[3/4] w-full rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-500 bg-gray-100",
+                                "group relative w-full rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-500 bg-gray-100 mb-6", // Added mb-6 for vertical spacing
                                 selectedIds.has(post.id) ? "ring-4 ring-blue-500 ring-offset-4" : "hover:-translate-y-2"
                             )}
                             onClick={() => {
@@ -151,13 +161,15 @@ export default function UserGallery({ posts }: { posts: Post[] }) {
                             }}
                         >
                             {/* Full Background Image */}
-                            <Image
-                                src={post.imageUrl}
-                                alt={post.caption || 'Gallery Image'}
-                                fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-110"
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            />
+                            <div className="relative">
+                                <Image
+                                    src={post.imageUrl}
+                                    alt={post.caption || 'Gallery Image'}
+                                    width={500}
+                                    height={800} // Aspect ratio approximation, or remove if using raw img for auto-height
+                                    className="w-full h-auto object-cover" // Ensure it respects width and natural height
+                                />
+                            </div>
 
                             {/* Gradient Protection for Text Visibility at top (optional) */}
                             <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/40 to-transparent opacity-60 pointer-events-none" />
@@ -236,7 +248,7 @@ export default function UserGallery({ posts }: { posts: Post[] }) {
                             )}
                         </motion.div>
                     ))}
-                </div>
+                </Masonry>
             )}
 
             {/* List View */}
