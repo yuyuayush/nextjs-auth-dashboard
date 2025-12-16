@@ -5,10 +5,11 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Polyline } from "
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { toast } from "sonner";
-import { Loader2, Save, MapPin, Search, Plane, Trash2, WifiOff, Zap, Users, Navigation, ShieldCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Loader2, Save, MapPin, Search, Plane, Trash2, WifiOff, Zap, Users, Navigation, ShieldCheck, ChevronDown } from "lucide-react";
 import { searchPlaces, getRecommendations, getPlaceName } from "@/app/actions/tour";
 import { createMapSession, joinSession, approveParticipant, updateLocation, getRoute, getMapSession } from "@/app/actions/map";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -53,8 +54,16 @@ function MapEvents({ onMapClick }: { onMapClick: (lat: number, lng: number) => v
 function MapController({ center, zoom }: { center: [number, number] | null, zoom: number }) {
     const map = useMapEvents({});
     useEffect(() => {
-        if (center && !isNaN(center[0]) && !isNaN(center[1])) {
-            map.flyTo(center, zoom, { duration: 1.5 });
+        if (center && !isNaN(Number(center[0])) && !isNaN(Number(center[1]))) {
+            // Delay to ensure map container has size (especially after view switch)
+            const timer = setTimeout(() => {
+                try {
+                    map.flyTo(center, zoom, { duration: 1.5 });
+                } catch (e) {
+                    console.warn("Map flyTo failed (likely due to hidden container)", e);
+                }
+            }, 100);
+            return () => clearTimeout(timer);
         }
     }, [center, zoom, map]);
     return null;
@@ -81,7 +90,8 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
     const [myLocation, setMyLocation] = useState<[number, number] | null>(null);
-    const [startLocationQuery, setStartLocationQuery] = useState("Detecting Location...");
+    const [useGps, setUseGps] = useState(true); // Default to GPS logic
+    const [startLocationQuery, setStartLocationQuery] = useState("");
 
     // Navigation State
     const [routeMetrics, setRouteMetrics] = useState<{ duration: number, distance: number } | null>(null);
@@ -168,7 +178,10 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
             const id = navigator.geolocation.watchPosition(
                 async (pos) => {
                     const { latitude, longitude } = pos.coords;
-                    setMyLocation([latitude, longitude]);
+
+                    if (useGps) {
+                        setMyLocation([latitude, longitude]);
+                    }
 
                     if (sessionId) {
                         await updateLocation(sessionId, latitude, longitude);
@@ -179,7 +192,7 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
             );
             return () => navigator.geolocation.clearWatch(id);
         }
-    }, [isRideMode, sessionId]);
+    }, [isRideMode, sessionId, useGps]);
 
     const handleStartLocationSearch = async () => {
         if (!startLocationQuery) return;
@@ -201,6 +214,7 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
                     return;
                 }
                 setMyLocation([place.lat, place.lng]);
+                setUseGps(false); // Switch to manual mode
                 toast.success(`Start set to: ${place.name}`);
                 setViewCenter([place.lat, place.lng]);
                 // Clear previous route if any locally
@@ -445,16 +459,48 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
                                     </h4>
 
                                     <div className="space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0 animate-pulse" />
-                                            <div className="flex-1 flex gap-1">
-                                                <Input
-                                                    value={startLocationQuery}
-                                                    onChange={(e) => setStartLocationQuery(e.target.value)}
-                                                    placeholder="Current Location..."
-                                                    className={`h-8 text-xs ${myLocation ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-200'}`}
-                                                />
-                                                {!myLocation && (
+                                        <div className="space-y-2">
+                                            {/* Dropdown for Start Location */}
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" className={`w-full justify-between h-9 text-xs border-slate-200 ${useGps ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white'}`}>
+                                                        <span className="flex items-center gap-2">
+                                                            {useGps ? <Navigation className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
+                                                            {useGps ? "Current Location (GPS)" : (startLocationQuery || "Custom Location")}
+                                                        </span>
+                                                        <ChevronDown className="w-3 h-3 opacity-50" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent className="w-[280px]" align="start">
+                                                    <DropdownMenuItem onClick={() => {
+                                                        setUseGps(true);
+                                                        setStartLocationQuery("");
+                                                        // Immediately try to refresh GPS if available? Effect handles it.
+                                                        toast.success("Switched to GPS Location");
+                                                    }}>
+                                                        <Navigation className="mr-2 h-4 w-4 text-blue-500" />
+                                                        <span>Use Current Location</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => {
+                                                        setUseGps(false);
+                                                        if (!startLocationQuery) setStartLocationQuery("");
+                                                    }}>
+                                                        <MapPin className="mr-2 h-4 w-4 text-orange-500" />
+                                                        <span>Pick Custom Location</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+
+                                            {/* Custom Search Input (only if not using GPS) */}
+                                            {!useGps && (
+                                                <div className="flex gap-1 animate-in fade-in slide-in-from-top-1">
+                                                    <Input
+                                                        value={startLocationQuery}
+                                                        onChange={(e) => setStartLocationQuery(e.target.value)}
+                                                        placeholder="Enter Start Address..."
+                                                        className="h-8 text-xs bg-white border-slate-200"
+                                                        onKeyDown={(e) => { if (e.key === 'Enter') handleStartLocationSearch(); }}
+                                                    />
                                                     <Button
                                                         size="icon"
                                                         className="h-8 w-8 hover:bg-blue-600 bg-blue-500"
@@ -463,35 +509,35 @@ export default function TourMap({ user }: { user?: { name: string, image?: strin
                                                     >
                                                         <Search className="w-3 h-3" />
                                                     </Button>
-                                                )}
+                                                </div>
+                                            )}
+                                            <div className="h-4 border-l-2 border-dashed border-slate-300 ml-1" />
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+                                                <Input
+                                                    placeholder="Enter Destination..."
+                                                    className="h-8 text-xs bg-white border-slate-200 focus-visible:ring-indigo-500"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleSearch(e);
+                                                    }}
+                                                />
+                                                <Button
+                                                    size="icon"
+                                                    className="h-8 w-8 hover:bg-indigo-700 bg-indigo-600"
+                                                    onClick={handleSearch}
+                                                >
+                                                    <Search className="w-3 h-3" />
+                                                </Button>
                                             </div>
                                         </div>
-                                        <div className="h-4 border-l-2 border-dashed border-slate-300 ml-1" />
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
-                                            <Input
-                                                placeholder="Enter Destination..."
-                                                className="h-8 text-xs bg-white border-slate-200 focus-visible:ring-indigo-500"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') handleSearch(e);
-                                                }}
-                                            />
-                                            <Button
-                                                size="icon"
-                                                className="h-8 w-8 hover:bg-indigo-700 bg-indigo-600"
-                                                onClick={handleSearch}
-                                            >
-                                                <Search className="w-3 h-3" />
-                                            </Button>
-                                        </div>
-                                    </div>
 
-                                    <Button onClick={calculateRoute} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9 text-xs shadow-md shadow-indigo-200 mt-2">
-                                        <Zap className="w-3 h-3 mr-2" />
-                                        {myLocation ? "Start Navigation" : "Set Start Point"}
-                                    </Button>
+                                        <Button onClick={calculateRoute} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-9 text-xs shadow-md shadow-indigo-200 mt-2">
+                                            <Zap className="w-3 h-3 mr-2" />
+                                            {myLocation ? "Start Navigation" : "Set Start Point"}
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 {routeMetrics && (

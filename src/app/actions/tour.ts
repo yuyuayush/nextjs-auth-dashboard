@@ -66,8 +66,8 @@ export async function getRecommendations(lat: number, lng: number) {
             return {
                 id: page.pageid.toString(),
                 name: page.title,
-                lat: page.lat,
-                lng: page.lon,
+                lat: typeof page.lat === 'number' ? page.lat : parseFloat(page.lat),
+                lng: typeof page.lon === 'number' ? page.lon : parseFloat(page.lon),
                 type: 'attraction',
                 rating: (4 + Math.random()).toFixed(1),
                 image: detail.thumbnail ? detail.thumbnail.source : null,
