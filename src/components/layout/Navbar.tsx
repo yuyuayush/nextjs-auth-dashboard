@@ -43,6 +43,9 @@ export default function Navbar({ session: initialSession }: NavbarProps) {
                             <Link href="/tour-plan">
                                 <Button variant="ghost">Tour Plan</Button>
                             </Link>
+                            <Link href="/games">
+                                <Button variant="ghost" className="text-purple-600 hover:text-purple-700 hover:bg-purple-50">Games</Button>
+                            </Link>
                             <Link href="/dashboard">
                                 <Button variant="ghost">Dashboard</Button>
                             </Link>
