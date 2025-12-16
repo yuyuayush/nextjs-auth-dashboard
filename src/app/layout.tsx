@@ -25,9 +25,9 @@ export const metadata: Metadata = {
   title: "FriendHub",
   description: "Connect with friends, chat, and share your world.",
   icons: {
-    icon: "/newlogo.jpg",
-    shortcut: "/newlogo.jpg",
-    apple: "/newlogo.jpg",
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

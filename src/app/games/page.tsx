@@ -113,6 +113,51 @@ const GAMES = [
         rom: '/games/mario3.nes',
         externalUrl: 'https://www.retrogames.cc/nes-games/super-mario-bros-3-usa-rev-a.html',
         description: 'Fly with the Tanooki suit in this massive sequel.'
+    },
+    {
+        id: 'pacman',
+        title: 'Pac-Man',
+        category: 'Arcade',
+        image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.png',
+        rom: '/games/pacman.nes',
+        externalUrl: 'https://www.retrogames.cc/nes-games/pac-man-usa-namco.html',
+        description: 'Waka waka waka! Eat all the dots and avoid ghosts.'
+    },
+    {
+        id: 'donkeykong',
+        title: 'Donkey Kong',
+        category: 'Arcade',
+        image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.png',
+        rom: '/games/donkeykong.nes',
+        externalUrl: 'https://www.retrogames.cc/nes-games/donkey-kong-classics-usa.html',
+        description: 'Help Mario save Pauline from the giant ape.'
+    },
+    {
+        id: 'finalfantasy',
+        title: 'Final Fantasy',
+        category: 'RPG',
+        image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vcf.png',
+        rom: '/games/finalfantasy.nes',
+        externalUrl: 'https://www.retrogames.cc/nes-games/final-fantasy-usa.html',
+        description: 'The RPG that started it all. Restore the crystals!'
+    },
+    {
+        id: 'ninjagaiden',
+        title: 'Ninja Gaiden',
+        category: 'Action',
+        image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7e.png',
+        rom: '/games/ninjagaiden.nes',
+        externalUrl: 'https://www.retrogames.cc/nes-games/ninja-gaiden-usa.html',
+        description: 'Fast-paced ninja action with cinematic storytelling.'
+    },
+    {
+        id: 'duckhunt',
+        title: 'Duck Hunt',
+        category: 'Shooter',
+        image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7g.png',
+        rom: '/games/duckhunt.nes',
+        externalUrl: 'https://www.retrogames.cc/nes-games/duck-hunt-usa.html',
+        description: 'Aim and fire! Watch out for the laughing dog.'
     }
 ];
 
@@ -141,34 +186,40 @@ export default function GamesPage() {
             )}
 
             {/* Hero Section */}
-            <div className="relative border-b border-white/10 bg-gradient-to-b from-purple-900/20 to-transparent pt-12 pb-16">
-                <div className="container mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+            <div className="relative border-b border-white/10 overflow-hidden">
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-black to-blue-900/20" />
+
+                <div className="container mx-auto px-4 pt-20 pb-20 relative z-10">
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-8">
                         <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-3 bg-purple-600 rounded-2xl shadow-lg shadow-purple-600/20">
-                                    <Gamepad2 className="w-8 h-8 text-white" />
-                                </div>
-                                <span className="text-purple-400 font-bold tracking-wider text-sm uppercase">Retro Center</span>
+                            <div className="flex items-center gap-3 mb-6 animate-in slide-in-from-left-4 fade-in duration-500">
+                                <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/50 text-purple-300 text-xs font-bold uppercase tracking-widest backdrop-blur-sm">
+                                    Retro Center
+                                </span>
                             </div>
-                            <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight mb-4">
-                                Classic<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Arcade</span>
+                            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-indigo-500 tracking-tighter mb-6 drop-shadow-2xl">
+                                Arcade<br />
+                                <span className="text-white">Universe</span>
                             </h1>
-                            <p className="text-gray-400 max-w-xl text-lg">
+                            <p className="text-gray-400 max-w-xl text-xl leading-relaxed font-light">
                                 Dive into the golden age of gaming. Play legendary titles directly in your browser.
-                                No setup required.
+                                <span className="text-purple-400 font-medium"> No setup required.</span>
                             </p>
                         </div>
 
-                        <div className="w-full md:w-auto relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search games..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full md:w-80 bg-white/5 border border-white/10 rounded-full py-3 pl-12 pr-6 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-                            />
+                        <div className="w-full md:w-auto relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-white transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Find your childhood..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full md:w-96 bg-black/50 backdrop-blur-md border border-white/10 rounded-full py-4 pl-12 pr-6 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all shadow-xl"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
